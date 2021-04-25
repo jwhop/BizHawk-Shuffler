@@ -1,6 +1,6 @@
 # BizHawk Event Shuffler
 
-A fork of Brossentia's BizHawk shuffler that triggers game swaps when the player performs in-game actions (e.g. collecting a ring in Sonic games)
+A fork of Brossentia's BizHawk Shuffler (https://github.com/brossentia/BizHawk-Shuffler) that triggers game swaps when the player performs in-game actions (e.g. collecting a ring in Sonic games)
 
 Games with events defined in the "Events" folder will switch when said event is triggered. All other games will obey the same switch-after-a-random-time-period rules as in Brossentia's original shuffler.
 
