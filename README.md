@@ -77,7 +77,7 @@ The following games have events associated with them. If there is a specific ver
 
 # Known bugs
 
-Super Mario 64 will switch when you get a ring. N64 games tend to display a "You cannot have two instances of Lua running at the same time" error. I do not yet know the cause of this or how to stop it. Let me know if you have any thoughts!
+Super Mario 64 will switch when you get a coin. N64 games tend to display a "You cannot have two instances of Lua running at the same time" error. I do not yet know the cause of this or how to stop it. Let me know if you have any thoughts!
 
 # Contact me
 
