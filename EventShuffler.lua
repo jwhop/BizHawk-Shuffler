@@ -401,7 +401,7 @@ function initialiseAlistairStuff()
 	romName = gameinfo.getromname()
 	romNameWithoutDetails = splitString(romName, "[(")[1]
 	romNameWithoutDetails = romNameWithoutDetails:upper() 
-	lastLetter = romNameWithoutDetails:sub(romNameWithoutDetails:len() - 1, romNameWithoutDetails:len())
+	lastLetter = romNameWithoutDetails:sub(romNameWithoutDetails:len(), romNameWithoutDetails:len())
 	if lastLetter ~= " " then
 		romNameWithoutDetails = romNameWithoutDetails .. " "
 	end
@@ -414,7 +414,8 @@ function initialiseAlistairStuff()
 		for line in io.lines(fileNameForShuffleDetails) do
 			console.log("Has loaded shuffler line: " .. line)
 			lineSplit = splitString(line, ">")
-			if tablelength(lineSplit) > 1 then
+			-- you can comment out values to track using the "/" character
+			if tablelength(lineSplit) > 1 and line:sub(1, 1) ~= "/" then
 				lastRings[lineSplit[1]] = 0
 				loadedGameDefs["scoreCounters"][lineSplit[1]] = {}
 				loadedGameDefs["scoreCounters"][lineSplit[1]]["bytes"] = {}
