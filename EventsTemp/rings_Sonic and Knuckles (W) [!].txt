@@ -1,2 +1,0 @@
-specialRing:4
-rings:4
