@@ -50,3 +50,36 @@ Future builds will hopefully have the following:
 1. Ability to determine a swap order rather than having games shuffled.
 2. Auto-remove DeleteMe files.
 2. Add source code to this repository for the setup program.
+
+# TO DO
+
+- Tidy up code
+- Fewer calls to console.log
+- Add infinite lives functionality
+- Fix N64 games bug
+- More games!!!
+
+# Supported Games
+
+The following games have events associated with them. If there is a specific version of the game that isn't supported (e.g. JP version of Super Mario World) could you type in `gameinfo.getromname()` in the Lua console, and let me know what text gets printed?
+
+- Super Mario World
+- Super Mario Bros
+- Super Mario Bros 2
+- Super Mario Bros 3
+- Super Mario Land
+- Super Mario Land 2
+- Wario Land (Super Mario Land 3)
+- Sonic the Hedgehog (Genesis)
+- Sonic the Hedgehog 2 (Genesis)
+- Sonic the Hedgehog 3
+- Sonic & Knuckles
+
+# Known bugs
+
+Super Mario 64 will switch when you get a ring. N64 games tend to display a "You cannot have two instances of Lua running at the same time" error. I do not yet know the cause of this or how to stop it. Let me know if you have any thoughts!
+
+# Contact me
+
+games@alistairaitcheson.com
+Twitter: http://twitter.com/agaitcheson

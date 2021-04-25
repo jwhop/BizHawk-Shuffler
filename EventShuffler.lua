@@ -1,3 +1,5 @@
+-- client.sleep(300)
+
 diff = 0
 lowTime = 5
 highTime = 30
@@ -211,6 +213,7 @@ end
 
 function nextGame(game) -- Changes to the next game and saves the current settings into userdata
 	if databaseSize > 0 then
+		client.SetSoundOn(false)
 		getSettings(settingsPath)
 		diff = 0
 		if currentChangeCount < changedRomCount then -- Only do dirLookup() if settings have changed
@@ -488,10 +491,15 @@ end
 initialiseAlistairStuff()
 
 while true do -- The main cycle that causes the emulator to advance and trigger a game switch.
-	if (diff >= timeLimit - 180) then
+	if (diff >= timeLimit - 180 and ringDefExists == false) then
 		startCountdown(count)
 	end
-	checkRingCount()
+	if diff == 5 then
+		client.SetSoundOn(true)
+	end
+	if diff > 0 then 
+		checkRingCount()
+	end
 	if emu.getsystemid() == "NULL" and diff == 5 then
 		flagToSwap = true
 		console.log("flagToSwap set at getsystemid")
