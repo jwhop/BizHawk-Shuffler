@@ -112,10 +112,6 @@ Fields after the `>` can be in any order. If not set then the fields will use de
 - Add infinite lives functionality
 - More games!!!
 
-# Known bugs
-
- - *Super Mario 64* will switch when you get a coin. N64 games tend to display a "You cannot have two instances of Lua running at the same time" error. I do not yet know the cause of this or how to stop it. Let me know if you have any thoughts!
-
 # Contact me
 
 games@alistairaitcheson.com
