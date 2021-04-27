@@ -7,3 +7,5 @@
 settings.xml
 TimeLogs/*
 PlayCount/*
+*.gg
+*.sms

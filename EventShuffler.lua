@@ -68,6 +68,14 @@ function memoryForConsole(whichConsole)
 		return "WRAM"
 	end
 
+	if whichConsole == "SMS" then
+		return "Main RAM"
+	end
+
+	if whichConsole == "GG" then
+		return "Main RAM"
+	end
+
 	return memory.getcurrentmemorydomain()
 end
 
@@ -405,6 +413,54 @@ end
 loadedGameDefs = {}
 loadedGameDefs["scoreCounters"] = {}
 
+function decodeGameDefs(sourceString)
+	allLines = splitString(sourceString, "\n")
+	for lineIndex, line in pairs(allLines) do
+		addToDebugLog("Decoding shuffler line: " .. line)
+		lineSplit = splitString(line, ">")
+		-- you can comment out values to track using the "/" character
+		if tablelength(lineSplit) > 1 and line:sub(1, 1) ~= "/" then
+			-- begin by applying defaults for this trigger
+			lastTriggerValue[lineSplit[1]] = 0
+			loadedGameDefs["scoreCounters"][lineSplit[1]] = {}
+			loadedGameDefs["scoreCounters"][lineSplit[1]]["bytes"] = {}
+			loadedGameDefs["scoreCounters"][lineSplit[1]]["base"] = 0x100
+			loadedGameDefs["scoreCounters"][lineSplit[1]]["minChange"] = 0
+			loadedGameDefs["scoreCounters"][lineSplit[1]]["maxChange"] = 100000000
+			loadedGameDefs["scoreCounters"][lineSplit[1]]["delay"] = 0
+			loadedGameDefs["scoreCounters"][lineSplit[1]]["domain"] = memoryForConsole(emu.getsystemid())
+
+			-- now decode each phrase
+			data = splitString(lineSplit[2], "/")
+			for i, dataEntry in pairs(data) do
+				entry = splitString(dataEntry, ":")
+				if entry[1] == "bytes" then
+					bytesSplit = splitString(entry[2], ",")
+					for j, byteName in pairs(bytesSplit) do
+						loadedGameDefs["scoreCounters"][lineSplit[1]]["bytes"][j] = tonumber("0x" .. byteName)
+					end
+				end
+				if entry[1] == "base" then
+					loadedGameDefs["scoreCounters"][lineSplit[1]]["base"] = tonumber(entry[2])
+				end
+				if entry[1] == "minChange" then
+					loadedGameDefs["scoreCounters"][lineSplit[1]]["minChange"] = tonumber(entry[2])
+				end
+				if entry[1] == "maxChange" then
+					loadedGameDefs["scoreCounters"][lineSplit[1]]["maxChange"] = tonumber(entry[2])
+				end
+				if entry[1] == "delay" then
+					loadedGameDefs["scoreCounters"][lineSplit[1]]["delay"] = tonumber(entry[2])
+				end
+				if entry[1] == "domain" then
+					loadedGameDefs["scoreCounters"][lineSplit[1]]["domain"] = entry[2]
+				end
+			end
+		end
+	end
+	eventDefinitionsExist = true
+end
+
 function initialiseEventTriggers()
 	addToDebugLog("!!!!!!!!!!!!!!! initialiseEventTriggers begins !!!!!!!!!!!!!!!!!!")
 
@@ -421,60 +477,27 @@ function initialiseEventTriggers()
 	addToDebugLog("romNameWithoutDetails: " .. romNameWithoutDetails)
 	fileNameForShuffleDetails = ".\\Events\\" .. romNameWithoutDetails .. ".txt"
 
-	userstateData = userdata.get(fileNameForShuffleDetails)
+	-- userstateData = userdata.get(fileNameForShuffleDetails)
 
 	-- If we've already cached trigger definitions for this game, use the cached definitions
 	-- Otherwise, decode the data saved in the text file if it exists, use it and cache it
 	-- Otherwise, default to using the timer
 	if userstateData ~= NULL then
-		loadedGameDefs = userstateData
+		decodeGameDefs(userstateData)
+		addToDebugLog("DECODED CACHED SPEC: " .. inspect(loadedGameDefs))
 	elseif (file_exists(fileNameForShuffleDetails)) then
+		runningDef = ""
 		for line in io.lines(fileNameForShuffleDetails) do
-			addToDebugLog("Has loaded shuffler line: " .. line)
-			lineSplit = splitString(line, ">")
-
-			-- you can comment out values to track using the "/" character
-			if tablelength(lineSplit) > 1 and line:sub(1, 1) ~= "/" then
-				-- begin by applying defaults for this trigger
-				lastTriggerValue[lineSplit[1]] = 0
-				loadedGameDefs["scoreCounters"][lineSplit[1]] = {}
-				loadedGameDefs["scoreCounters"][lineSplit[1]]["bytes"] = {}
-				loadedGameDefs["scoreCounters"][lineSplit[1]]["base"] = 0x100
-				loadedGameDefs["scoreCounters"][lineSplit[1]]["minChange"] = 0
-				loadedGameDefs["scoreCounters"][lineSplit[1]]["maxChange"] = 100000000
-				loadedGameDefs["scoreCounters"][lineSplit[1]]["delay"] = 0
-				loadedGameDefs["scoreCounters"][lineSplit[1]]["domain"] = memoryForConsole(emu.getsystemid())
-
-				-- now decode each phrase
-				data = splitString(lineSplit[2], "/")
-				for i, dataEntry in pairs(data) do
-					entry = splitString(dataEntry, ":")
-					if entry[1] == "bytes" then
-						bytesSplit = splitString(entry[2], ",")
-						for j, byteName in pairs(bytesSplit) do
-							loadedGameDefs["scoreCounters"][lineSplit[1]]["bytes"][j] = tonumber("0x" .. byteName)
-						end
-					end
-					if entry[1] == "base" then
-						loadedGameDefs["scoreCounters"][lineSplit[1]]["base"] = tonumber(entry[2])
-					end
-					if entry[1] == "minChange" then
-						loadedGameDefs["scoreCounters"][lineSplit[1]]["minChange"] = tonumber(entry[2])
-					end
-					if entry[1] == "maxChange" then
-						loadedGameDefs["scoreCounters"][lineSplit[1]]["maxChange"] = tonumber(entry[2])
-					end
-					if entry[1] == "delay" then
-						loadedGameDefs["scoreCounters"][lineSplit[1]]["delay"] = tonumber(entry[2])
-					end
-					if entry[1] == "domain" then
-						loadedGameDefs["scoreCounters"][lineSplit[1]]["domain"] = entry[2]
-					end
-				end
+			-- prepare a version of this for the cache
+			if runningDef:len() > 0 then
+				runningDef = runningDef .. "\n"
 			end
+			runningDef = runningDef .. line
 		end
-		addToDebugLog("LOADED SPEC: " .. inspect(loadedGameDefs))
-		eventDefinitionsExist = true
+		userdata.set(fileNameForShuffleDetails, runningDef)
+		decodeGameDefs(runningDef)
+
+		addToDebugLog("LOADED NEW SPEC: " .. inspect(loadedGameDefs))
 	else 
 		addToDebugLog("NO FILE AT: " .. fileNameForShuffleDetails)
 		eventDefinitionsExist = false

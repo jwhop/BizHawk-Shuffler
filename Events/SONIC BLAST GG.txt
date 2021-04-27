@@ -1,0 +1,1 @@
+rings>bytes:125F/delay:9
