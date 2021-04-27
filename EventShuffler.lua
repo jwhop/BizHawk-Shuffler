@@ -464,11 +464,11 @@ end
 function initialiseEventTriggers()
 	addToDebugLog("!!!!!!!!!!!!!!! initialiseEventTriggers begins !!!!!!!!!!!!!!!!!!")
 
-	-- determine the file name for this game. For example, the game "Sonic Forces (JUE) [!]"
-	-- running on the Sega Genesis will have its trigger stored at "Events/Sonic Forces GEN.txt"
+	-- determine the file name for this game. For example, the game "Sonic: Forces (JUE) [!]"
+	-- running on the Sega Genesis will have its trigger stored at "Events/Sonic, Forces GEN.txt"
 	romName = gameinfo.getromname()
 	romNameWithoutDetails = splitString(romName, "[(")[1]
-	romNameWithoutDetails = romNameWithoutDetails:upper() 
+	romNameWithoutDetails = romNameWithoutDetails:upper():gsub(":",",")
 	lastLetter = romNameWithoutDetails:sub(romNameWithoutDetails:len(), romNameWithoutDetails:len())
 	if lastLetter ~= " " then
 		romNameWithoutDetails = romNameWithoutDetails .. " "
