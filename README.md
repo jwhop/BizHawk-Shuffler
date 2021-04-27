@@ -51,11 +51,11 @@ The following games have events associated with them. If there is a specific ver
 *Game Boy*
 - Super Mario Land
 - Super Mario Land 2
-- Wario Land (Super Mario Land 3)
+- Wario Land: Super Mario Land 3
 
 *Genesis*
-- Sonic the Hedgehog (Genesis)
-- Sonic the Hedgehog 2 (Genesis)
+- Sonic the Hedgehog
+- Sonic the Hedgehog 2
 - Sonic the Hedgehog 3
 - Sonic & Knuckles
 
