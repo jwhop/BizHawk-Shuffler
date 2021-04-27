@@ -53,8 +53,6 @@ Future builds will hopefully have the following:
 
 # TO DO
 
-- Tidy up code
-- Fewer calls to console.log
 - Add infinite lives functionality
 - Fix N64 games bug
 - More games!!!
@@ -63,13 +61,23 @@ Future builds will hopefully have the following:
 
 The following games have events associated with them. If there is a specific version of the game that isn't supported (e.g. JP version of Super Mario World) could you type in `gameinfo.getromname()` in the Lua console, and let me know what text gets printed?
 
+*SNES*
 - Super Mario World
+- Super Mario Kart
+
+*NES*
 - Super Mario Bros
 - Super Mario Bros 2
 - Super Mario Bros 3
+- Dr Mario
+- Donkey Kong
+
+*Game Boy*
 - Super Mario Land
 - Super Mario Land 2
 - Wario Land (Super Mario Land 3)
+
+*Genesis*
 - Sonic the Hedgehog (Genesis)
 - Sonic the Hedgehog 2 (Genesis)
 - Sonic the Hedgehog 3
@@ -77,7 +85,7 @@ The following games have events associated with them. If there is a specific ver
 
 # Known bugs
 
-Super Mario 64 will switch when you get a coin. N64 games tend to display a "You cannot have two instances of Lua running at the same time" error. I do not yet know the cause of this or how to stop it. Let me know if you have any thoughts!
+ - *Super Mario 64* will switch when you get a coin. N64 games tend to display a "You cannot have two instances of Lua running at the same time" error. I do not yet know the cause of this or how to stop it. Let me know if you have any thoughts!
 
 # Contact me
 
