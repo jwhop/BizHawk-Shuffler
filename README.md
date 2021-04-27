@@ -110,7 +110,6 @@ Fields after the `>` can be in any order. If not set then the fields will use de
 # TO DO
 
 - Add infinite lives functionality
-- Fix N64 games bug
 - More games!!!
 
 # Known bugs
