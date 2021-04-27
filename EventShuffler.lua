@@ -1,4 +1,9 @@
--- client.sleep(300)
+DEBUG_MODE = false
+function addToDebugLog(text)
+	if DEBUG_MODE then
+		console.log(text)
+	end
+end
 
 diff = 0
 lowTime = 5
@@ -21,17 +26,18 @@ readOldTime = ""
 saveOldTime = 0
 savePlayCount = 0
 
-lastRings = {}
+lastTriggerValue = {}
 swapForTriggerCounters = {}
 flagToSwap = false
 hasLoadedFirstGame = false
-hasLoadedRings = false
+hasLoadedEventTriggers = false
 
-ringDefExists = false
+eventDefinitionsExist = false
 
 inspect = require('inspect')
 gameDefs = {}
 
+-- ------------------------------ USEFUL TOOL FUNCTIONS
 function splitString(inputstr, sep)
 	if sep == nil then
 		sep = "%s"
@@ -74,7 +80,7 @@ function file_exists(filePath)
 	if f then f:close() end
 	return f ~= nil
 end
-
+-- ------------------------------ END OF USEFUL TOOL FUNCTIONS
 
 if userdata.get("currentChangeCount") ~= nil then -- Syncs up the last time settings changed so it doesn't needlessly read the CurrentROMs folder again.
 	currentChangeCount = userdata.get("currentChangeCount")
@@ -119,16 +125,16 @@ function dirLookup(directory) -- Reads all ROM names in the CurrentROMs folder.
 	i = 0
 	for directory in io.popen([[dir ".\CurrentROMs" /b]]):lines() do
 		if ends_with(directory, ".bin") then
-			console.log("SKIP: " .. directory)
+			addToDebugLog("SKIP: " .. directory)
 		else
-			console.log("ROM: " .. directory)
+			addToDebugLog("ROM: " .. directory)
 			i = i + 1
 			userdata.set("rom" .. i,directory)
 			romSet[i] = directory
 		end
 	end
 	databaseSize = i
-	console.log("databaseSize is " .. databaseSize .. " roms!")
+	addToDebugLog("databaseSize is " .. databaseSize .. " roms!")
 end
 
 function getSettings(filename) -- Gets the settings saved by the RaceShufflerSetup.exe
@@ -158,14 +164,14 @@ function getSettings(filename) -- Gets the settings saved by the RaceShufflerSet
 		countdown = true
 	else
 		countdown = false
-		console.log("value5 " .. tostring(settingsValue["value5"]))
+		addToDebugLog("value5 " .. tostring(settingsValue["value5"]))
 	end	
 end
 
 if databaseSize ~= nil then
 	currentGame = userdata.get("currentGame")
 	openCurrentTime(rom)
-	console.log("Current Game: " .. currentGame)
+	addToDebugLog("Current Game: " .. currentGame)
 	lowTime = userdata.get("lowTime")
 	highTime = userdata.get("highTime")
 	seed = (userdata.get("seed"))
@@ -183,7 +189,7 @@ else
 	seed = settingsValue["value4"]
 	math.randomseed(seed)
 	math.random()
-	console.log("Initial seed " .. seed)
+	addToDebugLog("Initial seed " .. seed)
 end
 
 
@@ -193,7 +199,7 @@ while i < databaseSize do
 	romSet[i] = userdata.get("rom" .. i)
 end
 
-console.log("Time Limit " .. timeLimit)
+addToDebugLog("Time Limit " .. timeLimit)
 
 --Commenting delay out until we implement it in the setup bot. Feel free to use it yourself.
 --[[
@@ -230,12 +236,12 @@ function nextGame(game) -- Changes to the next game and saves the current settin
 			else
 				dirLookup(directory)
 				newGame = userdata.get("rom" .. ranNumber)
-				--console.log("Ran dirLookup()")
+				--addToDebugLog("Ran dirLookup()")
 			end
 			while currentGame == newGame or newGame == nil do
 				ranNumber = math.random(1,databaseSize)
 				newGame = romSet[ranNumber]
-				console.log("Reroll! " .. ranNumber)
+				addToDebugLog("Reroll! " .. ranNumber)
 			end
 		end
 		currentGame = newGame
@@ -245,13 +251,12 @@ function nextGame(game) -- Changes to the next game and saves the current settin
 		client.openrom(gamePath .. currentGame)
 
 		savestate.loadslot(1)
-		console.log("currentGame " .. currentGame .. " loaded!")
+		addToDebugLog("currentGame " .. currentGame .. " loaded!")
 		userdata.set("currentGame",currentGame)
 		userdata.set("timeLimit",timeLimit)
 		romDatabase = io.open("CurrentROM.txt","w")
 		romDatabase:write(gameinfo.getromname())
 		romDatabase:close()
-		--console.log(emu.getsystemid())
 		randIncrease = math.random(1,20)
 		userdata.set("seed",seed + randIncrease) -- Changes the seed so the next game/time don't follow a pattern.
 		userdata.set("currentChangeCount",currentChangeCount)
@@ -311,83 +316,85 @@ function saveTime(currentRom)
 	currentGamePlayCount:close()
 end
 
-function checkRingCount()
-	-- if diff % 120 == 0 then
-	-- 	console.log("checkRingCount " .. ", ".. get_ring_file_path_for_current_game() .. ", " .. emu.getsystemid() .. ", " .. tostring(hasLoadedRings))
-	-- end
-	if emu.getsystemid() ~= "NULL" and hasLoadedRings then
+function checkForSwapEvent()
+	-- memory inaccessible for the NULL system, so only check for swap events
+	-- if we're in an active emulator (e.g. Genesis, SNES, GB...), and we're
+	-- in a game where we have defined triggers in the "Events" folder
+	if emu.getsystemid() ~= "NULL" and hasLoadedEventTriggers then
 		if loadedGameDefs["scoreCounters"] == nil then
 			return
 		end
-		-- console.log("checkRingCount begins: " .. lastRings)
-		for key, value in pairs(loadedGameDefs["scoreCounters"]) do
-			-- console.log("scoreCounters : key = " .. key)
-			-- console.log("scoreCounters : value = " .. inspect(value))
-			
-			bytesToInspect = value["bytes"]
-			-- console.log("scoreCounters : bytesToInspect = " .. inspect(bytesToInspect))
 
-			currentRings = 0
+		-- for each defined trigger (e.g. score, ring count, coin count) for this game, 
+		-- calculate if it has changed since last frame
+		for key, value in pairs(loadedGameDefs["scoreCounters"]) do	
+			bytesToInspect = value["bytes"]
+			currentTriggerValue = 0
 			multiplicand = 1
+
+			-- Calculate the total based on the defined bytes and base for this trigger
+			-- EXAMPLES
+			-- if we track bytes {0xFE20, 0xFE21}, and read 0x12 from 0xFE20 and 0x34 from FE21
+			--	in base 256, total = (1 * 0x12) + (256 * 0x34)
+			--  in base 100, total = (1 * 0x2) + (10 * 0x1) + (100 * 0x4) + (1000 * 0x3)
+			--  in base 10, total = (1 * 0x12) + (10 * 0x34)
 			for i = 1,8 do
 				byteValue = bytesToInspect[i]
 				if byteValue ~= nil then
-					-- console.log("bytesToInspect : i = " .. i .. ", byteValue = " .. byteValue)
 					foundValue = memory.readbyte(byteValue, value["domain"])
 					if value["base"] == 100 then
 						lowerVal = foundValue % 16
 						upperVal = (foundValue - lowerVal) / 16
 						foundValue = lowerVal + (upperVal * 10)
 					end
-					currentRings = currentRings + (foundValue * multiplicand)
+					currentTriggerValue = currentTriggerValue + (foundValue * multiplicand)
 					multiplicand = multiplicand * value["base"]
 				end
 			end
 
-			-- if diff % 120 == 0 then
-			-- 	console.log("currentRings: " .. currentRings)
-			-- end
-
-			if lastRings[key] == nil then
-				lastRings[key] = 0
+			-- initialise the trigger if we haven't done so yet
+			if lastTriggerValue[key] == nil then
+				lastTriggerValue[key] = 0
 			end
 			
-			if currentRings ~= lastRings[key] then
-				console.log("lastRings["..key.."] = " .. lastRings[key])
-				ringDifference = currentRings - lastRings[key]
-				lastRings[key] = currentRings
 
-				if currentRings ~= 0 and ringDifference > value["minChange"] and ringDifference < value["maxChange"] then
-					-- flagToSwap = true
+			-- If the calculated score for this trigger is different enough from the
+			-- previous one, fire the "ready to switch!" trigger
+			if currentTriggerValue ~= lastTriggerValue[key] then
+				addToDebugLog("lastTriggerValue["..key.."] = " .. lastTriggerValue[key])
+				ringDifference = currentTriggerValue - lastTriggerValue[key]
+				lastTriggerValue[key] = currentTriggerValue
+
+				-- flag to begin counting down the swap timer for this trigger
+				-- (immediate if "delay" is set to 0, after a few frames otherwise)
+				if currentTriggerValue ~= 0 and ringDifference > value["minChange"] and ringDifference < value["maxChange"] then
 					swapForTriggerCounters[key] = 1
-					console.log("flagToSwap set at checkRingCount, ".. key .. " " .. lastRings[key] .. " -> " .. currentRings)
+					addToDebugLog("flagToSwap set at checkForSwapEvent, ".. key .. " " .. lastTriggerValue[key] .. " -> " .. currentTriggerValue)
 				end
 			end
 		end
 	end
 end
 
-function saveCurrentRings()
+-- Save the current states of the triggers, so that when we swap
+-- back into this game, it does not immediately fire a swap.
+-- Call this just before you switch games.
+function saveCurrentTriggerStates()
 	if emu.getsystemid() ~= "NULL" then
-		console.log("saveCurrentRings " .. emu.getsystemid())
-		console.log("saveCurrentRings writing")
-		-- fileToWrite = io.open(get_ring_file_path_for_current_game(),"w")
-		-- for key, value in pairs(lastRings) do
-		-- 	fileToWrite:write(key .. ":" .. tostring(lastRings[key]), "\n")
-		-- end
-		-- fileToWrite:close()
+		addToDebugLog("saveCurrentTriggerStates " .. emu.getsystemid())
+		addToDebugLog("saveCurrentTriggerStates writing")
 
 		runningString = ""
-		for key, value in pairs(lastRings) do
+		for key, value in pairs(lastTriggerValue) do
 			if runningString:len() > 0 then
 				runningString = runningString .. "/"
 			end
-			runningString = runningString .. key .. ":" .. tostring(lastRings[key])
+			runningString = runningString .. key .. ":" .. tostring(lastTriggerValue[key])
 		end
 
 		userdata.set(get_ring_file_path_for_current_game(), runningString)
 
-		console.log("saveCurrentRings wrote")
+		addToDebugLog("saveCurrentTriggerStates wrote")
 	end
 end
 
@@ -398,9 +405,11 @@ end
 loadedGameDefs = {}
 loadedGameDefs["scoreCounters"] = {}
 
-function initialiseAlistairStuff()
-	console.log("!!!!!!!!!!!!!!! which game are we in? !!!!!!!!!!!!!!!!!!")
+function initialiseEventTriggers()
+	addToDebugLog("!!!!!!!!!!!!!!! initialiseEventTriggers begins !!!!!!!!!!!!!!!!!!")
 
+	-- determine the file name for this game. For example, the game "Sonic Forces (JUE) [!]"
+	-- running on the Sega Genesis will have its trigger stored at "Events/Sonic Forces GEN.txt"
 	romName = gameinfo.getromname()
 	romNameWithoutDetails = splitString(romName, "[(")[1]
 	romNameWithoutDetails = romNameWithoutDetails:upper() 
@@ -409,17 +418,25 @@ function initialiseAlistairStuff()
 		romNameWithoutDetails = romNameWithoutDetails .. " "
 	end
 	romNameWithoutDetails = romNameWithoutDetails .. emu.getsystemid()
-	console.log("romNameWithoutDetails: " .. romNameWithoutDetails)
-
+	addToDebugLog("romNameWithoutDetails: " .. romNameWithoutDetails)
 	fileNameForShuffleDetails = ".\\Events\\" .. romNameWithoutDetails .. ".txt"
-	if (file_exists(fileNameForShuffleDetails)) then
-		-- shuffleDetailsSrc = io.open(fileNameForShuffleDetails, "r")
+
+	userstateData = userdata.get(fileNameForShuffleDetails)
+
+	-- If we've already cached trigger definitions for this game, use the cached definitions
+	-- Otherwise, decode the data saved in the text file if it exists, use it and cache it
+	-- Otherwise, default to using the timer
+	if userstateData ~= NULL then
+		loadedGameDefs = userstateData
+	elseif (file_exists(fileNameForShuffleDetails)) then
 		for line in io.lines(fileNameForShuffleDetails) do
-			console.log("Has loaded shuffler line: " .. line)
+			addToDebugLog("Has loaded shuffler line: " .. line)
 			lineSplit = splitString(line, ">")
+
 			-- you can comment out values to track using the "/" character
 			if tablelength(lineSplit) > 1 and line:sub(1, 1) ~= "/" then
-				lastRings[lineSplit[1]] = 0
+				-- begin by applying defaults for this trigger
+				lastTriggerValue[lineSplit[1]] = 0
 				loadedGameDefs["scoreCounters"][lineSplit[1]] = {}
 				loadedGameDefs["scoreCounters"][lineSplit[1]]["bytes"] = {}
 				loadedGameDefs["scoreCounters"][lineSplit[1]]["base"] = 0x100
@@ -428,6 +445,7 @@ function initialiseAlistairStuff()
 				loadedGameDefs["scoreCounters"][lineSplit[1]]["delay"] = 0
 				loadedGameDefs["scoreCounters"][lineSplit[1]]["domain"] = memoryForConsole(emu.getsystemid())
 
+				-- now decode each phrase
 				data = splitString(lineSplit[2], "/")
 				for i, dataEntry in pairs(data) do
 					entry = splitString(dataEntry, ":")
@@ -455,64 +473,78 @@ function initialiseAlistairStuff()
 				end
 			end
 		end
-		console.log("LOADED SPEC: " .. inspect(loadedGameDefs))
-		ringDefExists = true
+		addToDebugLog("LOADED SPEC: " .. inspect(loadedGameDefs))
+		eventDefinitionsExist = true
 	else 
-		console.log("NO FILE AT: " .. fileNameForShuffleDetails)
+		addToDebugLog("NO FILE AT: " .. fileNameForShuffleDetails)
+		eventDefinitionsExist = false
 	end
 
-	console.log("!!!!!!!!!!!!!!! do we have rings? !!!!!!!!!!!!!!!!!!") 
-
+	addToDebugLog("!!!!!!!!!!!!!!! do we have cached trigger states? !!!!!!!!!!!!!!!!!!") 
+	-- determine if we already have states cached for these triggers (i.e. from
+	-- when we last switched out of this game)
 	ringsFilePath = get_ring_file_path_for_current_game()
 	if userdata.containskey(ringsFilePath) then
-		console.log("rings user data exists at " .. ringsFilePath)
+		addToDebugLog("trigger state user data exists at " .. ringsFilePath)
 		rawData = userdata.get(ringsFilePath)
 		dataSplit = splitString(rawData, "/")
 		for i, dataLine in pairs(dataSplit) do
-			console.log("Has loaded rings line: " .. dataLine)
+			addToDebugLog("Has loaded trigger state line: " .. dataLine)
 			lineSplit = splitString(dataLine, ":")
 			if tablelength(lineSplit) > 1 then
-				lastRings[lineSplit[1]] = tonumber(lineSplit[2])
+				lastTriggerValue[lineSplit[1]] = tonumber(lineSplit[2])
 				swapForTriggerCounters[lineSplit[1]] = 0
 			end
 		end
-		hasLoadedRings = true
-		-- console.log("lastRings: " .. inspect(lastRings))
+		hasLoadedEventTriggers = true
 	else
-		console.log("No rings user data at " .. ringsFilePath)
-		hasLoadedRings = true
-		lastRings = {}
+		addToDebugLog("No trigger states in user data at " .. ringsFilePath)
+		hasLoadedEventTriggers = true
+		lastTriggerValue = {}
 		swapForTriggerCounters = {}
 	end
 
-	console.log("!!!!!!!!!!!!!!! end of Alistair stuff !!!!!!!!!!!!!!!!!!") 
+	addToDebugLog("!!!!!!!!!!!!!!! end of initialiseEventTriggers !!!!!!!!!!!!!!!!!!") 
 end
 
-initialiseAlistairStuff()
+-- SET UP THE EVENT TRACKERS HERE!
+initialiseEventTriggers()
 
 while true do -- The main cycle that causes the emulator to advance and trigger a game switch.
-	if (diff >= timeLimit - 180 and ringDefExists == false) then
+	if (diff >= timeLimit - 180 and eventDefinitionsExist == false) then
 		startCountdown(count)
 	end
+
+	-- The sound gets switched off during a game switch, so switch it on again
+	-- if we're satisfied we're back in the game
 	if diff == 5 then
 		client.SetSoundOn(true)
 	end
+	-- After the first frame, start checking for swap events being fired
+	-- e.g. collecting a ring
 	if diff > 0 then 
-		checkRingCount()
-	end
-	if emu.getsystemid() == "NULL" and diff == 5 then
-		flagToSwap = true
-		console.log("flagToSwap set at getsystemid")
+		checkForSwapEvent()
 	end
 
-	if diff > timeLimit and ringDefExists == false then
+	-- If no emulator is loaded, swap immediately
+	if emu.getsystemid() == "NULL" and diff == 5 then
+		flagToSwap = true
+		addToDebugLog("flagToSwap set at getsystemid")
+	end
+
+	-- If there are no defined events for this game use the timer
+	-- to decide when to switch
+	if diff > timeLimit and eventDefinitionsExist == false then
 		flagToSwap = true
 	end	
 
+	-- Check for triggers that have been fired. If they have,
+	-- count down until it is swap-time for them
+	-- (the "delay" features allows us to tell the difference between
+	-- score going up because you stomped an enemy, and score going up
+	-- during an end-of-level totaliser)
 	nextTriggerCounters = {}
-	-- console.log("swapForTriggerCounters = " .. inspect(swapForTriggerCounters))
 	for key, value in pairs(swapForTriggerCounters) do
-		-- console.log("swapForTriggerCounters: " .. key .. " = " .. value)
 		nextTriggerCounters[key] = value
 		if value > 0 then
 			nextTriggerCounters[key] = value + 1
@@ -526,16 +558,19 @@ while true do -- The main cycle that causes the emulator to advance and trigger 
 	end
 	swapForTriggerCounters = nextTriggerCounters
 
+	-- So the user can tell the script is running, log the frame count
+	-- every 5 seconds
 	diff = diff + 1
 	if (diff % 300) == 0 then
 		console.log("On frame " .. diff)
 	end
 
+	-- Swap to the next game if a swap has been fired!
 	if flagToSwap then
 		swapForTriggerCounters = {}
 		flagToSwap = false
-		hasLoadedRings = false
-		saveCurrentRings()
+		hasLoadedEventTriggers = false
+		saveCurrentTriggerStates()
 
 		saveTime(currentRom)
 		nextGame(game)

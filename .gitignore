@@ -5,3 +5,5 @@
 *.gb
 *.xml
 settings.xml
+TimeLogs/*
+PlayCount/*
