@@ -58,6 +58,21 @@ The following games have events associated with them. If there is a specific ver
 - Sonic the Hedgehog 2
 - Sonic the Hedgehog 3
 - Sonic & Knuckles
+- Sonic Spinball
+- Sonic 3D Blast
+
+*Master System*
+- Sonic the Hedgehog
+- Sonic the Hedgehog 2
+- Sonic Chaos
+- Sonic Blast
+
+*Game Gear*
+- Sonic the Hedgehog
+- Sonic the Hedgehog 2
+- Sonic Chaos
+- Sonic Triple Trouble
+- Sonic Blast
 
 # Defining Events
 
