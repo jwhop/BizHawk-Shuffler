@@ -1,8 +1,26 @@
+-- set to true to send debug logs (slows down swap execution)
 DEBUG_MODE = false
+-- set to true to make it so that the switch-timer will be ignored if
+-- events are defined for the current game
+EVENT_FOUND_PREVENTS_TIMER = false
+
 function addToDebugLog(text)
 	if DEBUG_MODE then
 		console.log(text)
 	end
+end
+
+-- Determine whether or not the timer can cause swap to happen
+function shouldAllowTimer() 
+	if EVENT_FOUND_PREVENTS_TIMER == false then
+		return true
+	end
+
+	if eventDefinitionsExist == false then
+		return true
+	end
+
+	return false
 end
 
 diff = 0
@@ -543,7 +561,7 @@ end
 initialiseEventTriggers()
 
 while true do -- The main cycle that causes the emulator to advance and trigger a game switch.
-	if (diff >= timeLimit - 180 and eventDefinitionsExist == false) then
+	if (diff >= timeLimit - 180 and shouldAllowTimer()) then
 		startCountdown(count)
 	end
 
@@ -566,7 +584,7 @@ while true do -- The main cycle that causes the emulator to advance and trigger 
 
 	-- If there are no defined events for this game use the timer
 	-- to decide when to switch
-	if diff > timeLimit and eventDefinitionsExist == false then
+	if diff > timeLimit and shouldAllowTimer() then
 		flagToSwap = true
 	end	
 
