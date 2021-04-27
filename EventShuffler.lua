@@ -130,8 +130,15 @@ function ends_with(str, ending)
 end
 
 function dirLookup(directory) -- Reads all ROM names in the CurrentROMs folder.
+	if directory ~= null then
+		addToDebugLog("calling dirLookup: ".. directory)
+	else	
+		addToDebugLog("calling dirLookup: NULL")
+	end
+
 	i = 0
 	for directory in io.popen([[dir ".\CurrentROMs" /b]]):lines() do
+		addToDebugLog("got directory ".. directory)
 		if ends_with(directory, ".bin") then
 			addToDebugLog("SKIP: " .. directory)
 		else
@@ -256,7 +263,9 @@ function nextGame(game) -- Changes to the next game and saves the current settin
 		userdata.set("first",1)
 		savestate.saveslot(1)
 
+		addToDebugLog("about to open rom: " .. gamePath .. currentGame)
 		client.openrom(gamePath .. currentGame)
+		addToDebugLog("did open rom: " .. gamePath .. currentGame)
 
 		savestate.loadslot(1)
 		addToDebugLog("currentGame " .. currentGame .. " loaded!")
