@@ -39,10 +39,13 @@ The following games have events associated with them. If there is a specific ver
 
 Versions with a * next to them will throw the `Can't have two instances of Lua...` error unless this patched version of BizHawk is used: https://www.alistairaitcheson.com/downloads/BizHawk_2.6.1_with_shuffler_fix_001.zip
 
+*Nintendo 64*
+- Super Mario 64 *
+
 *SNES*
 - Super Mario World
 - Super Mario Kart
-- The Legend of Zelda: A Link to the Past
+- The Legend of Zelda: A Link to the Past *
 
 *NES*
 - Super Mario Bros
@@ -57,12 +60,12 @@ Versions with a * next to them will throw the `Can't have two instances of Lua..
 - Super Mario Land
 - Super Mario Land 2
 - Wario Land: Super Mario Land 3
-- The Legend of Zelda: Link's Awakening
+- The Legend of Zelda: Link's Awakening *
 
 *Game Boy Color*
-- The Legend of Zelda: Link's Awakening DX
-- The Legend of Zelda: Oracle of Ages
-- The Legend of Zelda: Oracle of Seasons
+- The Legend of Zelda: Link's Awakening DX *
+- The Legend of Zelda: Oracle of Ages *
+- The Legend of Zelda: Oracle of Seasons *
 
 
 *Genesis*
@@ -85,18 +88,6 @@ Versions with a * next to them will throw the `Can't have two instances of Lua..
 - Sonic Chaos
 - Sonic Triple Trouble
 - Sonic Blast
-
-# Games that nearly are supported but seem to trigger an error
-
-I've added support for the following games, but switching into them seems to trigger an error: `Can't have lua running in two host threads at a time!`
-
-Let me know if you know of a solution for this, or if it doesn't happen to you!
-- Super Mario 64
-- Zelda: A Link to the Past
-- Zelda: Link's Awakening
-- Zelda: Link's Awakening DX
-- Zelda: Oracle of Ages
-- Zelda: Oracle of Seasons
 
 # Defining Events
 
