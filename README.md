@@ -47,6 +47,8 @@ The following games have events associated with them. If there is a specific ver
 - Super Mario Bros 3
 - Dr Mario
 - Donkey Kong
+- The Legend of Zelda
+- Zelda II: The Adventure of Link
 
 *Game Boy*
 - Super Mario Land
@@ -73,6 +75,18 @@ The following games have events associated with them. If there is a specific ver
 - Sonic Chaos
 - Sonic Triple Trouble
 - Sonic Blast
+
+# Games that nearly are supported but seem to trigger an error
+
+I've added support for the following games, but switching into them seems to trigger an error: `Can't have lua running in two host threads at a time!`
+
+Let me know if you know of a solution for this, or if it doesn't happen to you!
+- Super Mario 64
+- Zelda: A Link to the Past
+- Zelda: Link's Awakening
+- Zelda: Link's Awakening DX
+- Zelda: Oracle of Ages
+- Zelda: Oracle of Seasons
 
 # Defining Events
 
