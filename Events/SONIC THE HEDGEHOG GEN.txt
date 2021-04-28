@@ -1,1 +1,2 @@
 rings>bytes:FE21/calculation:sum/minChange:0/maxChange:1000
+score>bytes:FE29,FE28,FE27/delay:5/controlOutput:CHANGE
