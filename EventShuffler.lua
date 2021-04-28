@@ -163,6 +163,7 @@ inspect = require('inspect')
 gameDefs = {}
 
 controlEventsSent = 0
+queuedControlEvents = {}
 
 if userdata.get("currentChangeCount") ~= nil then -- Syncs up the last time settings changed so it doesn't needlessly read the CurrentROMs folder again.
 	currentChangeCount = userdata.get("currentChangeCount")
@@ -460,6 +461,10 @@ function checkForSwapEvent()
 				-- (immediate if "delay" is set to 0, after a few frames otherwise)
 				if currentTriggerValue ~= 0 and ringDifference > value["minChange"] and ringDifference < value["maxChange"] then
 					swapForTriggerCounters[key] = 1
+
+					addToDebugLog("queuedControlEvents: " .. inspect(queuedControlEvents) .. ", " .. value["controlOutput"])
+					table.insert(queuedControlEvents, value["controlOutput"])
+
 					addToDebugLog("flagToSwap set at checkForSwapEvent, ".. key .. " " .. lastTriggerValue[key] .. " -> " .. currentTriggerValue)
 				end
 			end
@@ -512,6 +517,7 @@ function decodeGameDefs(sourceString)
 			loadedGameDefs["scoreCounters"][lineSplit[1]]["maxChange"] = 100000000
 			loadedGameDefs["scoreCounters"][lineSplit[1]]["delay"] = 0
 			loadedGameDefs["scoreCounters"][lineSplit[1]]["domain"] = memoryForConsole(emu.getsystemid())
+			loadedGameDefs["scoreCounters"][lineSplit[1]]["controlOutput"] = "PRESS"
 
 			-- now decode each phrase
 			data = splitString(lineSplit[2], "/")
@@ -537,6 +543,9 @@ function decodeGameDefs(sourceString)
 				end
 				if entry[1] == "domain" then
 					loadedGameDefs["scoreCounters"][lineSplit[1]]["domain"] = entry[2]
+				end
+				if entry[1] == "controlOutput" then
+					loadedGameDefs["scoreCounters"][lineSplit[1]]["controlOutput"] = entry[2]
 				end
 			end
 		end
@@ -667,11 +676,22 @@ function activateEventOutcome()
 		eventIndex = math.random(1, 100)
 		eventCountString = string.format("%05d", eventIndex)
 
+		stringToSend = ""
+		for index, value in pairs(queuedControlEvents) do
+			if stringToSend:len() > 0 then
+				stringToSend = stringToSend .. ","
+			end
+			stringToSend = stringToSend .. value
+		end
+
 		filePath = ".\\ControlsOutput\\event_" .. eventCountString .. ".txt"
 		fileToWrite = io.open(filePath,"w")
-		fileToWrite:write("PRESS")
+		fileToWrite:write(stringToSend)
 		fileToWrite:close()
 
+		addToDebugLog(EVENT_OUTCOME_OUTPUT_CONTROL .. " wrote: " .. stringToSend .. " to " .. filePath)
+
+		queuedControlEvents = {}
 		controlEventsSent = controlEventsSent + 1
 	end
 end

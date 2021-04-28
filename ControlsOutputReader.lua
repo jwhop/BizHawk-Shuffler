@@ -1,4 +1,4 @@
-DEBUG_MODE = false
+DEBUG_MODE = true
 
 FOLDER_TO_READ = ".\\ControlsOutput\\"
 
@@ -27,6 +27,17 @@ function addToDebugLog(text)
 	end
 end
 
+function splitString(inputstr, sep)
+	if sep == nil then
+		sep = "%s"
+	end
+	local t={}
+	for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+			table.insert(t, str)
+	end
+	return t
+end
+
 
 function tablelength(T)
 	local count = 0
@@ -40,7 +51,7 @@ function file_exists(filePath)
 	return f ~= nil
 end
 
-FRAMES_ON_PER_BUTTON = 20
+FRAMES_ON_PER_BUTTON = 10
 FRAMES_OFF_PER_BUTTON = 10
 
 FRAMES_BETWEEN_CHOOSE = 60 * 5
@@ -70,6 +81,7 @@ function chooseNextButton(rerollCount)
         chooseNextButton(rerollCount + 1)
     else
         addToDebugLog("Picked new button: " .. queuedButton)
+        chooseButtonsFrames = 0
     end
 end
 
@@ -91,7 +103,15 @@ function showPendingControlsState()
 
     gui.drawBox(timerStartX, buffer+15, timerStartX + timerMaxWidth, 17+buffer, "white", "black")
     gui.drawBox(timerStartX, buffer+15, timerStartX + timerWidth, 17+buffer, "white", "white")
+end
 
+function showActiveControlsState()
+    colour = "yellow"
+    if buttonOnFrames > FRAMES_ON_PER_BUTTON then
+        colour = "lime"
+    end
+    gui.drawBox(client.bufferwidth()/2-60,buffer,client.bufferwidth()-(client.bufferwidth()/2+1-60),15+buffer,colour,"black")
+    gui.drawText(client.bufferwidth()/2,buffer,queuedButton,"white",null,null,null,"center")
 end
 
 function checkForQueuedButtonEvents()
@@ -109,11 +129,32 @@ function checkForQueuedButtonEvents()
             if hasUsedEvent then
                 queuedEventCount = queuedEventCount + 1
             else
+                shouldSendPress = false
+                shouldChangeButton = false
+
                 -- delete this file
+                for line in io.lines(filePath) do	
+                    wordsInLine = splitString(line, ",")
+                    for index, value in pairs(wordsInLine) do
+                        if value:upper() == "PRESS" then
+                            shouldSendPress = true
+                        end
+                        if value:upper() == "CHANGE" then
+                            shouldChangeButton = true
+                        end
+                    end
+                end
+
+                if shouldSendPress then
+                    beginButtonPress()
+                end
+                if shouldChangeButton then
+                    chooseNextButton(0)
+                end
+
                 addToDebugLog("Deleting press: ")
                 os.remove(filePath)
     
-                beginButtonPress()
                 hasUsedEvent = true
             end
         end
@@ -133,7 +174,6 @@ while true do
 
         if chooseButtonsFrames > FRAMES_BETWEEN_CHOOSE or queuedButton == null then
             chooseNextButton(0)
-            chooseButtonsFrames = 0
         end
 
         showPendingControlsState()
@@ -148,7 +188,9 @@ while true do
         chooseButtonsFrames = 0
         buttonOnFrames = buttonOnFrames + 1
 
-        if buttonOnFrames > FRAMES_ON_PER_BUTTON then
+        showActiveControlsState()
+
+        if buttonOnFrames > FRAMES_ON_PER_BUTTON + FRAMES_OFF_PER_BUTTON then
             activeButton = null
         end
     end
