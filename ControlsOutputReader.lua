@@ -1,4 +1,4 @@
-DEBUG_MODE = true
+DEBUG_MODE = false
 
 FOLDER_TO_READ = ".\\ControlsOutput\\"
 
@@ -14,6 +14,7 @@ if emu.getsystemid() == "NES" then
 	buffer = 8
 end
 
+controlIndex = 1
 
 math.randomseed(os.time())
 
@@ -67,7 +68,11 @@ queuedEventCount = 0
 function chooseNextButton(rerollCount)
     addToDebugLog("activeControls: " .. inspect(activeControls))
 
-    index = math.random(1, tablelength(activeControls))
+    index = controlIndex --math.random(1, tablelength(activeControls))
+    controlIndex = controlIndex + 1
+    if controlIndex > tablelength(activeControls) then
+        controlIndex = 1
+    end
     addToDebugLog("Choose button at index " .. index)
     lastQueuedButton = queuedButton
     if lastQueuedButton == null then
