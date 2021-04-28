@@ -1,61 +1,24 @@
--- set to true to send debug logs (slows down swap execution)
-DEBUG_MODE = false
--- set to true to make it so that the switch-timer will be ignored if
--- events are defined for the current game
-EVENT_FOUND_PREVENTS_TIMER = false
+SETTINGS_FILE_PATH = "EventShufflerSettings.txt"
 
+-- initialise settings to default values
+DEBUG_MODE = false
+EVENT_FOUND_PREVENTS_TIMER = false
+EVENT_OUTCOME_SWITCH_GAME = "EVENT_OUTCOME_SWITCH_GAME"
+EVENT_OUTCOME_OUTPUT_CONTROL = "EVENT_OUTCOME_OUTPUT_CONTROL"
+EVENT_OUTCOME_WRITE_TO_RAM = "EVENT_OUTCOME_WRITE_TO_RAM"
+ON_EVENT = {EVENT_OUTCOME_SWITCH_GAME}
+NUMBER_OF_RAM_WRITES_ON_EVENT = 5
+RAM_WRITE_MIN = -1
+RAM_WRITE_MAX = -1
+RAM_WRITE_DOMAIN = "DEFAULT"
+
+-- ------------------------------ USEFUL TOOL FUNCTIONS
 function addToDebugLog(text)
 	if DEBUG_MODE then
 		console.log(text)
 	end
 end
 
--- Determine whether or not the timer can cause swap to happen
-function shouldAllowTimer() 
-	if EVENT_FOUND_PREVENTS_TIMER == false then
-		return true
-	end
-
-	if eventDefinitionsExist == false then
-		return true
-	end
-
-	return false
-end
-
-diff = 0
-lowTime = 5
-highTime = 30
-newGame = 0
-i = 0
-x = 0
-romSet = {}
-gamePath = ".\\CurrentROMs\\"
-settingsPath = "settings.xml"
-if userdata.get("countdown") ~= nil then
-	countdown = userdata.get("countdown")
-else
-	countdown = false
-end
-currentChangeCount = 0
-currentGame = 1
-c = {}
-readOldTime = ""
-saveOldTime = 0
-savePlayCount = 0
-
-lastTriggerValue = {}
-swapForTriggerCounters = {}
-flagToSwap = false
-hasLoadedFirstGame = false
-hasLoadedEventTriggers = false
-
-eventDefinitionsExist = false
-
-inspect = require('inspect')
-gameDefs = {}
-
--- ------------------------------ USEFUL TOOL FUNCTIONS
 function splitString(inputstr, sep)
 	if sep == nil then
 		sep = "%s"
@@ -107,6 +70,99 @@ function file_exists(filePath)
 	return f ~= nil
 end
 -- ------------------------------ END OF USEFUL TOOL FUNCTIONS
+
+-- Determine whether or not the timer can cause swap to happen
+function shouldAllowTimer() 
+	if EVENT_FOUND_PREVENTS_TIMER == false then
+		return true
+	end
+
+	if eventDefinitionsExist == false then
+		return true
+	end
+
+	return false
+end
+
+function outcomeIsEnabled(outcomeId)
+	for i, event in pairs(ON_EVENT) do
+		if event == outcomeId then
+			return true
+		end
+	end
+
+	return false
+end
+
+function readEventShufflerSettings() 
+	if (file_exists(SETTINGS_FILE_PATH)) then
+		for line in io.lines(SETTINGS_FILE_PATH) do	
+			components = splitString(line, ":")
+			if tablelength(components) > 1 then
+				if components[1] == "DEBUG_MODE" then
+					DEBUG_MODE = components[2]:upper() == "TRUE"
+				end
+				if components[1] == "EVENT_FOUND_PREVENTS_TIMER" then
+					EVENT_FOUND_PREVENTS_TIMER = components[2]:upper() == "TRUE"
+				end
+				if components[1] == "ON_EVENT" then
+					ON_EVENT = splitString(components[2], ",")
+				end
+				if components[1] == "NUMBER_OF_RAM_WRITES_ON_EVENT" then
+					NUMBER_OF_RAM_WRITES_ON_EVENT = tonumber(components[2])
+				end
+				if components[1] == "RAM_WRITE_MIN" then
+					RAM_WRITE_MIN = tonumber("0x" .. components[2])
+				end
+				if components[1] == "RAM_WRITE_MAX" then
+					RAM_WRITE_MAX = tonumber("0x" .. components[2])
+				end
+				if components[1] == "RAM_WRITE_DOMAIN" then
+					RAM_WRITE_DOMAIN = components[2]
+				end
+			end
+		end
+	else
+		console.log("No settings file at " .. SETTINGS_FILE_PATH)
+	end
+end
+
+-- Begin by getting the settings
+readEventShufflerSettings()
+
+diff = 0
+lowTime = 5
+highTime = 30
+newGame = 0
+i = 0
+x = 0
+romSet = {}
+gamePath = ".\\CurrentROMs\\"
+settingsPath = "settings.xml"
+if userdata.get("countdown") ~= nil then
+	countdown = userdata.get("countdown")
+else
+	countdown = false
+end
+currentChangeCount = 0
+currentGame = 1
+c = {}
+readOldTime = ""
+saveOldTime = 0
+savePlayCount = 0
+
+lastTriggerValue = {}
+swapForTriggerCounters = {}
+flagToSwap = false
+hasLoadedFirstGame = false
+hasLoadedEventTriggers = false
+
+eventDefinitionsExist = false
+
+inspect = require('inspect')
+gameDefs = {}
+
+controlEventsSent = 0
 
 if userdata.get("currentChangeCount") ~= nil then -- Syncs up the last time settings changed so it doesn't needlessly read the CurrentROMs folder again.
 	currentChangeCount = userdata.get("currentChangeCount")
@@ -557,6 +613,69 @@ function initialiseEventTriggers()
 	addToDebugLog("!!!!!!!!!!!!!!! end of initialiseEventTriggers !!!!!!!!!!!!!!!!!!") 
 end
 
+-- does the thing that gets done, for example, when Mario grabs a coin
+function activateEventOutcome() 
+	-- switch to a new game
+	if outcomeIsEnabled(EVENT_OUTCOME_SWITCH_GAME) then
+		swapForTriggerCounters = {}
+		hasLoadedEventTriggers = false
+		saveCurrentTriggerStates()
+
+		saveTime(currentRom)
+		nextGame(game)
+
+		hasLoadedFirstGame = true
+		shouldLoop = false
+	end
+
+	-- write to a random RAM location
+	if outcomeIsEnabled(EVENT_OUTCOME_WRITE_TO_RAM) then
+		math.randomseed(os.time())
+		math.random()
+
+		-- determine the settings from EventShufflerSettings.txt
+		domain = memoryForConsole(emu.getsystemid())
+		if RAM_WRITE_DOMAIN ~= "DEFAULT" then
+			domain = RAM_WRITE_DOMAIN
+		end
+		min = 0
+		max = memory.getmemorydomainsize(domain)
+		if RAM_WRITE_MIN > -1 then
+			min = RAM_WRITE_MIN
+			if min > RAM_WRITE_MAX then
+				min = RAM_WRITE_MAX
+			end
+		end
+		if RAM_WRITE_MAX > -1 and RAM_WRITE_MAX < max then
+			max = RAM_WRITE_MAX
+			if max < min then
+				max = min
+			end
+		end
+
+		-- write to RAM as many times as we have defined in EventShufflerSettings.txt
+		for i = 1, NUMBER_OF_RAM_WRITES_ON_EVENT do
+			index = math.random(min, max)
+			value = math.random(0, 255)
+			addToDebugLog(i ..": Writing " .. value .. " to " .. index .. " in " .. domain)
+			memory.writebyte(index, value, domain)
+		end
+	end
+
+	-- write a "controls event outcome"
+	if outcomeIsEnabled(EVENT_OUTCOME_OUTPUT_CONTROL) then
+		eventIndex = math.random(1, 100)
+		eventCountString = string.format("%05d", eventIndex)
+
+		filePath = ".\\ControlsOutput\\event_" .. eventCountString .. ".txt"
+		fileToWrite = io.open(filePath,"w")
+		fileToWrite:write("PRESS")
+		fileToWrite:close()
+
+		controlEventsSent = controlEventsSent + 1
+	end
+end
+
 -- SET UP THE EVENT TRACKERS HERE!
 initialiseEventTriggers()
 
@@ -577,14 +696,14 @@ while true do -- The main cycle that causes the emulator to advance and trigger 
 	end
 
 	-- If no emulator is loaded, swap immediately
-	if emu.getsystemid() == "NULL" and diff == 5 then
+	if emu.getsystemid() == "NULL" and diff == 5 and outcomeIsEnabled(EVENT_OUTCOME_SWITCH_GAME) then
 		flagToSwap = true
 		addToDebugLog("flagToSwap set at getsystemid")
 	end
 
 	-- If there are no defined events for this game use the timer
 	-- to decide when to switch
-	if diff > timeLimit and shouldAllowTimer() then
+	if diff > timeLimit and shouldAllowTimer() and outcomeIsEnabled(EVENT_OUTCOME_SWITCH_GAME) then
 		flagToSwap = true
 	end	
 
@@ -617,17 +736,9 @@ while true do -- The main cycle that causes the emulator to advance and trigger 
 
 	-- Swap to the next game if a swap has been fired!
 	if flagToSwap then
-		swapForTriggerCounters = {}
 		flagToSwap = false
-		hasLoadedEventTriggers = false
-		saveCurrentTriggerStates()
-
-		saveTime(currentRom)
-		nextGame(game)
-
-		hasLoadedFirstGame = true
-		shouldLoop = false
-	else 
-		emu.frameadvance()
-	end	
+		activateEventOutcome()
+	end 
+		
+	emu.frameadvance()
 end
