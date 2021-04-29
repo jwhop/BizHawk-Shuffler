@@ -459,7 +459,7 @@ function checkForSwapEvent()
 
 				-- flag to begin counting down the swap timer for this trigger
 				-- (immediate if "delay" is set to 0, after a few frames otherwise)
-				if currentTriggerValue ~= 0 and ringDifference > value["minChange"] and ringDifference < value["maxChange"] then
+				if currentTriggerValue ~= 0 and ringDifference > value["minChange"] and ringDifference < value["maxChange"] and value["enabled"] then
 					swapForTriggerCounters[key] = 1
 
 					addToDebugLog("queuedControlEvents: " .. inspect(queuedControlEvents) .. ", " .. value["controlOutput"])
@@ -518,9 +518,9 @@ function decodeGameDefs(sourceString)
 			loadedGameDefs["scoreCounters"][lineSplit[1]]["delay"] = 0
 			loadedGameDefs["scoreCounters"][lineSplit[1]]["domain"] = memoryForConsole(emu.getsystemid())
 			loadedGameDefs["scoreCounters"][lineSplit[1]]["controlOutput"] = "PRESS"
+			loadedGameDefs["scoreCounters"][lineSplit[1]]["enabled"] = true
 
 			-- now decode each phrase
-			data = splitString(lineSplit[2], "/")
 			for i, dataEntry in pairs(data) do
 				entry = splitString(dataEntry, ":")
 				if entry[1] == "bytes" then
@@ -546,6 +546,9 @@ function decodeGameDefs(sourceString)
 				end
 				if entry[1] == "controlOutput" then
 					loadedGameDefs["scoreCounters"][lineSplit[1]]["controlOutput"] = entry[2]
+				end
+				if entry[1] == "enabled" then
+					loadedGameDefs["scoreCounters"][lineSplit[1]]["enabled"] = entry[2]:upper == "TRUE"
 				end
 			end
 		end

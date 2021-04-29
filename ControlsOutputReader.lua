@@ -1,5 +1,7 @@
 DEBUG_MODE = false
 
+SETTINGS_FILE_PATH = "EventShufflerSettings.txt"
+
 FOLDER_TO_READ = ".\\ControlsOutput\\"
 
 CONTROLS_DICT = {
@@ -9,16 +11,12 @@ CONTROLS_DICT = {
     NULL = {"NONE"}
 }
 
+SECONDS_BETWEEN_SWITCHES = 1
+
 buffer = 0 -- Sets countdown location. Adding 8 makes it appear correct for the NES.
 if emu.getsystemid() == "NES" then
 	buffer = 8
 end
-
-controlIndex = 1
-
-math.randomseed(os.time())
-
-activeControls = CONTROLS_DICT[emu.getsystemid()]
 
 inspect = require('inspect')
 
@@ -52,10 +50,48 @@ function file_exists(filePath)
 	return f ~= nil
 end
 
+function readEventShufflerSettings() 
+	if (file_exists(SETTINGS_FILE_PATH)) then
+		for line in io.lines(SETTINGS_FILE_PATH) do	
+			components = splitString(line, ":")
+			if tablelength(components) > 1 then
+				if components[1] == "CONTROLS_READER_DEBUG_MODE" then
+					DEBUG_MODE = components[2]:upper() == "TRUE"
+				end
+                if components[1] == "CONTROLS_READER_SECONDS_BETWEEN_SWITCHES" then
+                    SECONDS_BETWEEN_SWITCHES = tonumber(components[2])
+                end
+			end
+		end
+	else
+		console.log("No settings file at " .. SETTINGS_FILE_PATH)
+	end
+end
+
+function shuffleArray(array)
+    clonedArray = {}
+    for key, value in pairs(array) do
+        clonedArray[key] = value
+    end
+
+    outputArray = {}
+    while tablelength(clonedArray) > 0 do
+        index = math.random(1, tablelength(clonedArray))
+        -- console.log("Removing cloned object at index " .. index)
+        table.insert(outputArray, clonedArray[index])
+
+        table.remove(clonedArray, index)
+    end
+
+    -- console.log("Returning shuffled array: " .. inspect(outputArray))
+    return outputArray
+end
+
+
 FRAMES_ON_PER_BUTTON = 10
 FRAMES_OFF_PER_BUTTON = 10
 
-FRAMES_BETWEEN_CHOOSE = 60 * 5
+FRAMES_BETWEEN_CHOOSE = 60 * SECONDS_BETWEEN_SWITCHES
 
 buttonOnFrames = 0
 chooseButtonsFrames = 0
@@ -64,6 +100,13 @@ queuedButton = null
 activeButton = null
 
 queuedEventCount = 0
+
+controlIndex = 1
+
+math.randomseed(os.time())
+
+activeControls = CONTROLS_DICT[emu.getsystemid()]
+activeControls = shuffleArray(activeControls)
 
 function chooseNextButton(rerollCount)
     addToDebugLog("activeControls: " .. inspect(activeControls))
