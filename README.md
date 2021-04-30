@@ -33,6 +33,44 @@ Future builds will hopefully have the following:
 2. Auto-remove DeleteMe files.
 2. Add source code to this repository for the setup program.
 
+# Changing Event Shuffler Settings
+
+Run the program `EventShufflerSetup.exe` to change the following settings used in `EventShuffler.lua`:
+- Should debug output be shown in Lua console
+- Should the game use the timer as well as events to switch games
+- What happens when an event is triggered (switch games, write into RAM, or send button to controls reader)
+
+You can also change the following settings for `ControlsOutputReader.lua`
+- Should debug output be shown in Lua console
+- How long should games wait between changing the selected button
+
+You can also edit the events that are defined for each game. These changes will take effect the next time a game switch occurs, or when `EventShuffler.lua` is restarted.
+
+# Having One Game Control Another
+
+1. Run the program `EventShufflerSetup.exe`
+2. Make sure "Send button press to Controls Reader" is checked
+3. Open the game you want to be in control in BizHawk
+4. Open the Lua console and run `EventShuffler.lua`.
+    - If you want this game to be silent, type client.SetSoundOn(false) in the Lua console
+5. Open a second instance of BizHawk. In this new instance, open the game you want to receive the controls
+6. Open the Lua console for this instance and run `ControlsOutputReader.lua`
+
+If you want to change which events cause the selected button to change, do the following:
+1. While `EventShuffler.lua` is running, run the program `EventShufflerSetup.exe`
+2. Click on `Show/Add Current Game`
+3. Click on the event you want to change, under `Events for this game`
+4. Change the value of `Control Reader Effect`.
+    - `PRESS` - the receiving game will press a button when this event fires
+    - `CHANGE` - the receiving game will change selected button when this event fires
+
+# Adding Support for New Games
+
+1. Open the game you want to add in BizHawk. Run the script `EventShuffler.lua` in the Lua console.
+2. Run the program `EventShufflerSetup.exe` 
+3. Press Show/Add Current Game
+4. Use the event editor to define the new rule
+
 # Supported Games
 
 The following games have events associated with them. If there is a specific version of the game that isn't supported (e.g. JP version of Super Mario World) could you type in `gameinfo.getromname()` in the Lua console, and let me know what text gets printed?
@@ -111,7 +149,6 @@ Fields after the `>` can be in any order. If not set then the fields will use de
 
 - Add infinite lives functionality
 - More games!!!
-- Make a simple application to toggle settings (see `EventShufflerSettings.txt`)
 
 # Coming soon
 
