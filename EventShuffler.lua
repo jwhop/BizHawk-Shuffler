@@ -437,7 +437,7 @@ function checkForSwapEvent()
 					if domainToCheck == "DEFAULT" then
 						domainToCheck = memoryForConsole(emu.getsystemid())
 					end
-					foundValue = memory.readbyte(byteValue, value["domain"])
+					foundValue = memory.readbyte(byteValue, domainToCheck)
 					if value["base"] == 100 then
 						lowerVal = foundValue % 16
 						upperVal = (foundValue - lowerVal) / 16
