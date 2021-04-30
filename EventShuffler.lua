@@ -578,7 +578,7 @@ function initialiseEventTriggers()
 
 	-- expose the ID of the current game for the EventShufflerSetup tool
 	romDatabase = io.open(".\\EventsTemp\\EventShufflerGameID.txt","w")
-	romDatabase:write(gameinfo.getromname())
+	romDatabase:write(romNameWithoutDetails)
 	romDatabase:close()
 
 	fileNameForShuffleDetails = ".\\Events\\" .. romNameWithoutDetails .. ".txt"
