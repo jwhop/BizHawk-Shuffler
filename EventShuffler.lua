@@ -433,6 +433,10 @@ function checkForSwapEvent()
 			for i = 1,8 do
 				byteValue = bytesToInspect[i]
 				if byteValue ~= nil then
+					domainToCheck = value["domain"]
+					if domainToCheck == "DEFAULT" then
+						domainToCheck = memoryForConsole(emu.getsystemid())
+					end
 					foundValue = memory.readbyte(byteValue, value["domain"])
 					if value["base"] == 100 then
 						lowerVal = foundValue % 16
@@ -516,7 +520,7 @@ function decodeGameDefs(sourceString)
 			loadedGameDefs["scoreCounters"][lineSplit[1]]["minChange"] = 0
 			loadedGameDefs["scoreCounters"][lineSplit[1]]["maxChange"] = 100000000
 			loadedGameDefs["scoreCounters"][lineSplit[1]]["delay"] = 0
-			loadedGameDefs["scoreCounters"][lineSplit[1]]["domain"] = memoryForConsole(emu.getsystemid())
+			loadedGameDefs["scoreCounters"][lineSplit[1]]["domain"] = "DEFAULT" --memoryForConsole(emu.getsystemid())
 			loadedGameDefs["scoreCounters"][lineSplit[1]]["controlOutput"] = "PRESS"
 			loadedGameDefs["scoreCounters"][lineSplit[1]]["enabled"] = true
 
@@ -570,6 +574,12 @@ function initialiseEventTriggers()
 	end
 	romNameWithoutDetails = romNameWithoutDetails .. emu.getsystemid()
 	addToDebugLog("romNameWithoutDetails: " .. romNameWithoutDetails)
+
+	-- expose the ID of the current game for the EventShufflerSetup tool
+	romDatabase = io.open(".\\EventsTemp\\EventShufflerGameID.txt","w")
+	romDatabase:write(gameinfo.getromname())
+	romDatabase:close()
+
 	fileNameForShuffleDetails = ".\\Events\\" .. romNameWithoutDetails .. ".txt"
 
 	-- userstateData = userdata.get(fileNameForShuffleDetails)
