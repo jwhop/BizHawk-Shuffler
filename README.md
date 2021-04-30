@@ -52,7 +52,7 @@ You can also edit the events that are defined for each game. These changes will 
 2. Make sure "Send button press to Controls Reader" is checked
 3. Open the game you want to be in control in BizHawk
 4. Open the Lua console and run `EventShuffler.lua`.
-    - If you want this game to be silent, type client.SetSoundOn(false) in the Lua console
+    - If you want this game to be silent, type `client.SetSoundOn(false)` in the Lua console
 5. Open a second instance of BizHawk. In this new instance, open the game you want to receive the controls
 6. Open the Lua console for this instance and run `ControlsOutputReader.lua`
 
