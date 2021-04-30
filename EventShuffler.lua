@@ -525,6 +525,7 @@ function decodeGameDefs(sourceString)
 			loadedGameDefs["scoreCounters"][lineSplit[1]]["enabled"] = true
 
 			-- now decode each phrase
+			data = splitString(lineSplit[2], "/")
 			for i, dataEntry in pairs(data) do
 				entry = splitString(dataEntry, ":")
 				if entry[1] == "bytes" then
@@ -552,7 +553,7 @@ function decodeGameDefs(sourceString)
 					loadedGameDefs["scoreCounters"][lineSplit[1]]["controlOutput"] = entry[2]
 				end
 				if entry[1] == "enabled" then
-					loadedGameDefs["scoreCounters"][lineSplit[1]]["enabled"] = entry[2]:upper == "TRUE"
+					loadedGameDefs["scoreCounters"][lineSplit[1]]["enabled"] = entry[2]:upper() == "TRUE"
 				end
 			end
 		end
