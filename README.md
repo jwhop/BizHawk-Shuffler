@@ -150,10 +150,6 @@ Fields after the `>` can be in any order. If not set then the fields will use de
 - Add infinite lives functionality
 - More games!!!
 
-# Coming soon
-
-You see that script `ControlsOutputReader.lua`? It allows events from one game to act as button presses in another. But it's really complicated to set up right now. So I want to make functionality to make it easier to set up.
-
 # Contact me
 
 games@alistairaitcheson.com
