@@ -49,7 +49,7 @@ You can also edit the events that are defined for each game. These changes will 
 # Having One Game Control Another
 
 1. Run the program `EventShufflerSetup.exe`
-2. Make sure "Send button press to Controls Reader" is checked
+2. Make sure `Send button press to Controls Reader` is checked
 3. Open the game you want to be in control in BizHawk
 4. Open the Lua console and run `EventShuffler.lua`.
     - If you want this game to be silent, type `client.SetSoundOn(false)` in the Lua console
