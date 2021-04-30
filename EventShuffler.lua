@@ -528,32 +528,34 @@ function decodeGameDefs(sourceString)
 			data = splitString(lineSplit[2], "/")
 			for i, dataEntry in pairs(data) do
 				entry = splitString(dataEntry, ":")
-				if entry[1] == "bytes" then
-					bytesSplit = splitString(entry[2], ",")
-					for j, byteName in pairs(bytesSplit) do
-						loadedGameDefs["scoreCounters"][lineSplit[1]]["bytes"][j] = tonumber("0x" .. byteName)
+				if entry[2] ~= nil then
+					if entry[1] == "bytes" then
+						bytesSplit = splitString(entry[2], ",")
+						for j, byteName in pairs(bytesSplit) do
+							loadedGameDefs["scoreCounters"][lineSplit[1]]["bytes"][j] = tonumber("0x" .. byteName)
+						end
 					end
-				end
-				if entry[1] == "base" then
-					loadedGameDefs["scoreCounters"][lineSplit[1]]["base"] = tonumber(entry[2])
-				end
-				if entry[1] == "minChange" then
-					loadedGameDefs["scoreCounters"][lineSplit[1]]["minChange"] = tonumber(entry[2])
-				end
-				if entry[1] == "maxChange" then
-					loadedGameDefs["scoreCounters"][lineSplit[1]]["maxChange"] = tonumber(entry[2])
-				end
-				if entry[1] == "delay" then
-					loadedGameDefs["scoreCounters"][lineSplit[1]]["delay"] = tonumber(entry[2])
-				end
-				if entry[1] == "domain" then
-					loadedGameDefs["scoreCounters"][lineSplit[1]]["domain"] = entry[2]
-				end
-				if entry[1] == "controlOutput" then
-					loadedGameDefs["scoreCounters"][lineSplit[1]]["controlOutput"] = entry[2]
-				end
-				if entry[1] == "enabled" then
-					loadedGameDefs["scoreCounters"][lineSplit[1]]["enabled"] = entry[2]:upper() == "TRUE"
+					if entry[1] == "base" then
+						loadedGameDefs["scoreCounters"][lineSplit[1]]["base"] = tonumber(entry[2])
+					end
+					if entry[1] == "minChange" then
+						loadedGameDefs["scoreCounters"][lineSplit[1]]["minChange"] = tonumber(entry[2])
+					end
+					if entry[1] == "maxChange" then
+						loadedGameDefs["scoreCounters"][lineSplit[1]]["maxChange"] = tonumber(entry[2])
+					end
+					if entry[1] == "delay" then
+						loadedGameDefs["scoreCounters"][lineSplit[1]]["delay"] = tonumber(entry[2])
+					end
+					if entry[1] == "domain" then
+						loadedGameDefs["scoreCounters"][lineSplit[1]]["domain"] = entry[2]
+					end
+					if entry[1] == "controlOutput" then
+						loadedGameDefs["scoreCounters"][lineSplit[1]]["controlOutput"] = entry[2]
+					end
+					if entry[1] == "enabled" then
+						loadedGameDefs["scoreCounters"][lineSplit[1]]["enabled"] = entry[2]:upper() == "TRUE"
+					end
 				end
 			end
 		end
