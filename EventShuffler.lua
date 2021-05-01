@@ -219,21 +219,28 @@ function dirLookup(directory) -- Reads all ROM names in the CurrentROMs folder.
 		addToDebugLog("calling dirLookup: NULL")
 	end
 
-	i = 0
+	romIndex = 0
 	for directory in io.popen([[dir ".\CurrentROMs" /b]]):lines() do
 		addToDebugLog("got directory ".. directory)
 		-- do not allow BIN, IMG or SUB files. Sega CD games can only be run fron CUE files or ISO files
-		if ends_with(directory, ".bin") or ends_with(directory, ".img") or ends_with(directory, ".sub")  then
+		if ends_with(directory, ".bin") or ends_with(directory, ".img") or ends_with(directory, ".sub") or ends_with(directory, ".ccd") then
 			addToDebugLog("SKIP: " .. directory)
 		else
 			addToDebugLog("ROM: " .. directory)
-			i = i + 1
-			userdata.set("rom" .. i,directory)
-			romSet[i] = directory
+			romIndex = romIndex + 1
+			userdata.set("rom" .. romIndex,directory)
+			romSet[romIndex] = directory
 		end
 	end
-	databaseSize = i
+	databaseSize = romIndex
+	userdata.set("databaseSize", databaseSize)
 	addToDebugLog("databaseSize is " .. databaseSize .. " roms!")
+	for i=1,romIndex do
+		whatsInRomSet = romSet[i]
+		if whatsInRomSet == null then whatsInRomSet = "NULL" end
+		whatsInUserData = userdata.get("rom"..i)
+		if whatsInUserData == null then whatsInUserData = "NULL" end
+	end
 end
 
 function getSettings(filename) -- Gets the settings saved by the RaceShufflerSetup.exe
@@ -292,10 +299,13 @@ else
 end
 
 
-i = 0
-while i < databaseSize do
-	i = i + 1
-	romSet[i] = userdata.get("rom" .. i)
+databaseIndex = 0
+databaseSize = userdata.get("databaseSize")
+
+while databaseIndex < databaseSize do
+	databaseIndex = databaseIndex + 1
+	romSet[databaseIndex] = userdata.get("rom" .. databaseIndex)
+	addToDebugLog("    Got rom rom ID userdata:" .. databaseIndex .. " = " .. romSet[databaseIndex])
 end
 
 addToDebugLog("Time Limit " .. timeLimit)
@@ -329,48 +339,64 @@ function nextGame(game) -- Changes to the next game and saves the current settin
 			dirLookup(directory)
 			newGame = romSet[1]
 		else
-			ranNumber = math.random(1,databaseSize)
+			ranNumber = math.random(1, databaseSize)
+			addToDebugLog("Wants to load rom at index " .. ranNumber)
 			if romSet[ranNumber] ~= nil then
 				newGame = romSet[ranNumber]
+				addToDebugLog("    This rom is " .. newGame)
 			else
+				addToDebugLog("    No ROM. Getting a new one from dirLookup ")
 				dirLookup(directory)
 				newGame = userdata.get("rom" .. ranNumber)
+				addToDebugLog("    Got " .. newGame)
 				--addToDebugLog("Ran dirLookup()")
 			end
 			while currentGame == newGame or newGame == nil do
+				if newGame == nil then
+					addToDebugLog("   Fetched game is nil - rerolling...")
+				else
+					addToDebugLog("   Fetched game " .. currentGame .." is the same as the last one - rerolling...")
+				end
 				ranNumber = math.random(1,databaseSize)
 				newGame = romSet[ranNumber]
-				addToDebugLog("Reroll! " .. ranNumber)
+				addToDebugLog("    Reroll! " .. ranNumber)
 			end
 		end
 		currentGame = newGame
 		userdata.set("first",1)
 		savestate.saveslot(1)
 
-		addToDebugLog("about to open rom: " .. gamePath .. currentGame)
-		client.openrom(gamePath .. currentGame)
-		addToDebugLog("did open rom: " .. gamePath .. currentGame)
-
-		savestate.loadslot(1)
-		addToDebugLog("currentGame " .. currentGame .. " loaded!")
 		userdata.set("currentGame",currentGame)
 		userdata.set("timeLimit",timeLimit)
 		romDatabase = io.open("CurrentROM.txt","w")
 		romDatabase:write(gameinfo.getromname())
 		romDatabase:close()
-		randIncrease = math.random(1,20)
-		userdata.set("seed",seed + randIncrease) -- Changes the seed so the next game/time don't follow a pattern.
 		userdata.set("currentChangeCount",currentChangeCount)
-		userdata.set("databaseSize",databaseSize)
 		userdata.set("lowTime",lowTime)
 		userdata.set("highTime",highTime)
-		userdata.set("consoleID",emu.getsystemid())
 		userdata.set("countdown",countdown)
-		x = 0
-		while x < databaseSize do
-			x = x + 1
-			userdata.set("rom" .. x, romSet[x])
+
+		-- saving the database size must come before switching ROMs to prevent a race
+		-- condition where an old game list hangs around in data
+		databaseIndex = 0
+		userdata.set("databaseSize",databaseSize)
+		while databaseIndex < databaseSize do
+			databaseIndex = databaseIndex + 1
+			userdata.set("rom" .. databaseIndex, romSet[databaseIndex])
+			addToDebugLog("    Setting in userdata, rom" .. databaseIndex .. " = " .. romSet[databaseIndex])
 		end
+
+		-- moving the actual game switch to the end prevents race conditions
+		addToDebugLog("about to open rom: " .. gamePath .. currentGame)
+		client.openrom(gamePath .. currentGame)
+		addToDebugLog("did open rom: " .. gamePath .. currentGame)
+		savestate.loadslot(1)
+		addToDebugLog("currentGame " .. currentGame .. " loaded!")
+
+		-- choosing next seed must come after the game loads
+		randIncrease = math.random(1,20)
+		userdata.set("seed",seed + randIncrease) -- Changes the seed so the next game/time don't follow a pattern.
+		userdata.set("consoleID",emu.getsystemid())
 	end	
 end
 
