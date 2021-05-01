@@ -1,4 +1,5 @@
 SETTINGS_FILE_PATH = "EventShufflerSettings.txt"
+GAME_LIST_PATH = ".\\EventsTemp\\GameList.txt"
 
 -- initialise settings to default values
 DEBUG_MODE = false
@@ -11,6 +12,8 @@ NUMBER_OF_RAM_WRITES_ON_EVENT = 5
 RAM_WRITE_MIN = -1
 RAM_WRITE_MAX = -1
 RAM_WRITE_DOMAIN = "DEFAULT"
+
+gameList = {}
 
 -- ------------------------------ USEFUL TOOL FUNCTIONS
 function addToDebugLog(text)
@@ -135,8 +138,21 @@ function readEventShufflerSettings()
 	end
 end
 
+function loadGameList() 
+	gameList = {}
+	if (file_exists(GAME_LIST_PATH)) then
+		for line in io.lines(GAME_LIST_PATH) do	
+			table.insert(gameList, line)
+		end
+	else
+		console.log("No game list file at " .. GAME_LIST_PATH)
+	end
+end
+
 -- Begin by getting the settings
 readEventShufflerSettings()
+
+loadGameList()
 
 diff = 0
 lowTime = 5
@@ -216,6 +232,8 @@ function ends_with(str, ending)
 end
 
 function dirLookup(directory) -- Reads all ROM names in the CurrentROMs folder.
+	gameList = {}
+
 	if directory ~= null then
 		addToDebugLog("calling dirLookup: ".. directory)
 	else	
@@ -233,17 +251,24 @@ function dirLookup(directory) -- Reads all ROM names in the CurrentROMs folder.
 			romIndex = romIndex + 1
 			userdata.set("rom" .. romIndex,directory)
 			romSet[romIndex] = directory
+
+			table.insert(gameList, directory)
 		end
 	end
 	databaseSize = romIndex
 	userdata.set("databaseSize", databaseSize)
 	addToDebugLog("databaseSize is " .. databaseSize .. " roms!")
-	for i=1,romIndex do
-		whatsInRomSet = romSet[i]
-		if whatsInRomSet == null then whatsInRomSet = "NULL" end
-		whatsInUserData = userdata.get("rom"..i)
-		if whatsInUserData == null then whatsInUserData = "NULL" end
+
+	fileToWrite = io.open(GAME_LIST_PATH,"w")
+	runningString = ""
+	for index, textValue in pairs(gameList) do
+		if runningString:len() > 0 then
+			runningString = runningString .. "\n"
+		end
+		runningString = runningString .. textValue
 	end
+	fileToWrite:write(runningString)
+	fileToWrite:close()
 end
 
 function getSettings(filename) -- Gets the settings saved by the RaceShufflerSetup.exe
@@ -342,7 +367,9 @@ function cleanup()
 end
 
 function nextGame(game) -- Changes to the next game and saves the current settings into userdata
-	if databaseSize > 0 then
+	totalGames = tablelength(gameList)
+	addToDebugLog("Picking next game from set of " .. totalGames .. ": " .. inspect(gameList))
+	if totalGames > 0 then
 		client.SetSoundOn(false)
 		getSettings(settingsPath)
 		diff = 0
@@ -350,14 +377,14 @@ function nextGame(game) -- Changes to the next game and saves the current settin
 			dirLookup(directory)
 			currentChangeCount = changedRomCount
 		end
-		if databaseSize == 1 then
+		if totalGames == 1 then
 			dirLookup(directory)
-			newGame = romSet[1]
+			newGame = gameList[1]
 		else
-			ranNumber = math.random(1, databaseSize)
+			ranNumber = math.random(1, totalGames)
 			addToDebugLog("Wants to load rom at index " .. ranNumber)
-			if romSet[ranNumber] ~= nil then
-				newGame = romSet[ranNumber]
+			if gameList[ranNumber] ~= nil then
+				newGame = gameList[ranNumber]
 				addToDebugLog("    This rom is " .. newGame)
 			else
 				addToDebugLog("    No ROM. Getting a new one from dirLookup ")
@@ -372,8 +399,8 @@ function nextGame(game) -- Changes to the next game and saves the current settin
 				else
 					addToDebugLog("   Fetched game " .. currentGame .." is the same as the last one - rerolling...")
 				end
-				ranNumber = math.random(1,databaseSize)
-				newGame = romSet[ranNumber]
+				ranNumber = math.random(1,totalGames)
+				newGame = gameList[ranNumber]
 				addToDebugLog("    Reroll! " .. ranNumber)
 			end
 		end
@@ -397,7 +424,6 @@ function nextGame(game) -- Changes to the next game and saves the current settin
 		addToDebugLog("did open rom: " .. gamePath .. currentGame)
 		savestate.loadslot(1)
 		addToDebugLog("currentGame " .. currentGame .. " loaded!")
-
 
 		-- choosing next seed must come after the game loads
 		-- I'm not sure why. Does it get immediately read by the next game? Feels like something
@@ -443,6 +469,10 @@ else
 end
 
 function saveTime(currentRom)
+	if currentGame == null then
+		addToDebugLog("Cannot save time without currentGame")
+		return
+	end
 	currentGameTime = io.open(".\\TimeLogs\\" .. currentGame .. ".txt","w")
 	if saveOldTime ~= nil then
 		newTime = saveOldTime + timeLimit
