@@ -60,6 +60,10 @@ function memoryForConsole(whichConsole)
 	if whichConsole == "SAT" then
 		return "Work Ram High"
 	end
+	
+	if whichConsole == "GBA" then
+		return "IWRAM"
+	end
 
 	return memory.getcurrentmemorydomain()
 end
@@ -726,7 +730,7 @@ while true do -- The main cycle that causes the emulator to advance and trigger 
 
 	-- The sound gets switched off during a game switch, so switch it on again
 	-- if we're satisfied we're back in the game
-	if diff == 5 then
+	if diff == 1 then
 		client.SetSoundOn(true)
 	end
 	-- After the first frame, start checking for swap events being fired
