@@ -222,7 +222,8 @@ function dirLookup(directory) -- Reads all ROM names in the CurrentROMs folder.
 	i = 0
 	for directory in io.popen([[dir ".\CurrentROMs" /b]]):lines() do
 		addToDebugLog("got directory ".. directory)
-		if ends_with(directory, ".bin") then
+		-- do not allow BIN, IMG, CUE or SUB files. Sega CD games can only be run fron CUE files or ISO files
+		if ends_with(directory, ".bin") or ends_with(directory, ".img") or ends_with(directory, ".bin") then
 			addToDebugLog("SKIP: " .. directory)
 		else
 			addToDebugLog("ROM: " .. directory)
