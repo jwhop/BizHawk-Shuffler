@@ -153,7 +153,6 @@ else
 	countdown = false
 end
 currentChangeCount = 0
-currentGame = 1
 c = {}
 readOldTime = ""
 saveOldTime = 0
@@ -179,6 +178,10 @@ end
 databaseSize = userdata.get("databaseSize")
 
 function openCurrentTime(rom)
+	if currentGame == nil then
+		addToDebugLog("openCurrentTime failed - no currentGame set")
+		return
+	end
 	oldTime = io.open(".\\TimeLogs\\" .. currentGame .. ".txt","a+")
 	readOldTimeString = oldTime:read("*line")
 	if readOldTimeString ~= nil then
@@ -276,11 +279,23 @@ end
 
 if databaseSize ~= nil then
 	currentGame = userdata.get("currentGame")
+	if currentGame == nil then
+		currentGame = 0
+	end
 	openCurrentTime(rom)
 	addToDebugLog("Current Game: " .. currentGame)
 	lowTime = userdata.get("lowTime")
+	if lowTime == nil then
+		lowTime = 5
+	end
 	highTime = userdata.get("highTime")
+	if highTime == nil then
+		highTime = 5
+	end
 	seed = (userdata.get("seed"))
+	if seed == nil then
+		seed = 1234567
+	end
 	math.randomseed(seed)
 	math.random()
 	if lowTime ~= highTime then
@@ -366,16 +381,6 @@ function nextGame(game) -- Changes to the next game and saves the current settin
 		userdata.set("first",1)
 		savestate.saveslot(1)
 
-		userdata.set("currentGame",currentGame)
-		userdata.set("timeLimit",timeLimit)
-		romDatabase = io.open("CurrentROM.txt","w")
-		romDatabase:write(gameinfo.getromname())
-		romDatabase:close()
-		userdata.set("currentChangeCount",currentChangeCount)
-		userdata.set("lowTime",lowTime)
-		userdata.set("highTime",highTime)
-		userdata.set("countdown",countdown)
-
 		-- saving the database size must come before switching ROMs to prevent a race
 		-- condition where an old game list hangs around in data
 		databaseIndex = 0
@@ -393,10 +398,23 @@ function nextGame(game) -- Changes to the next game and saves the current settin
 		savestate.loadslot(1)
 		addToDebugLog("currentGame " .. currentGame .. " loaded!")
 
+
 		-- choosing next seed must come after the game loads
+		-- I'm not sure why. Does it get immediately read by the next game? Feels like something
+		-- that'd cause a race condition...
 		randIncrease = math.random(1,20)
 		userdata.set("seed",seed + randIncrease) -- Changes the seed so the next game/time don't follow a pattern.
 		userdata.set("consoleID",emu.getsystemid())
+
+		userdata.set("currentGame",currentGame)
+		userdata.set("timeLimit",timeLimit)
+		romDatabase = io.open("CurrentROM.txt","w")
+		romDatabase:write(gameinfo.getromname())
+		romDatabase:close()
+		userdata.set("currentChangeCount",currentChangeCount)
+		userdata.set("lowTime",lowTime)
+		userdata.set("highTime",highTime)
+		userdata.set("countdown",countdown)
 	end	
 end
 
