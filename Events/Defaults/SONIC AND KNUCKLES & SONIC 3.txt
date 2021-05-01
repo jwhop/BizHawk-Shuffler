@@ -1,3 +1,0 @@
-rings>bytes:FE21
-specialRings>bytes:E43B/maxChange:5
-score>bytes:FE29,FE28,FE27/delay:5/controlOutput:CHANGE

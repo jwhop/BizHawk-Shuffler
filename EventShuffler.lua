@@ -6,7 +6,7 @@ EVENT_FOUND_PREVENTS_TIMER = false
 EVENT_OUTCOME_SWITCH_GAME = "EVENT_OUTCOME_SWITCH_GAME"
 EVENT_OUTCOME_OUTPUT_CONTROL = "EVENT_OUTCOME_OUTPUT_CONTROL"
 EVENT_OUTCOME_WRITE_TO_RAM = "EVENT_OUTCOME_WRITE_TO_RAM"
-ON_EVENT = {EVENT_OUTCOME_SWITCH_GAME}
+ON_EVENT = {}
 NUMBER_OF_RAM_WRITES_ON_EVENT = 5
 RAM_WRITE_MIN = -1
 RAM_WRITE_MAX = -1
@@ -55,6 +55,10 @@ function memoryForConsole(whichConsole)
 
 	if whichConsole == "GG" then
 		return "Main RAM"
+	end
+
+	if whichConsole == "SAT" then
+		return "Work Ram High"
 	end
 
 	return memory.getcurrentmemorydomain()
