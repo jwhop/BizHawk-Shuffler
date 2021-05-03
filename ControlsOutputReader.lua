@@ -60,8 +60,10 @@ function readEventShufflerSettings()
 				end
                 if components[1] == "CONTROLS_READER_SECONDS_BETWEEN_SWITCHES" then
                     SECONDS_BETWEEN_SWITCHES = tonumber(components[2])
+                    addToDebugLog("   Set SECONDS_BETWEEN_SWITCHES = " .. SECONDS_BETWEEN_SWITCHES)
                 end
 			end
+            addToDebugLog("Reading setup line " .. line)
 		end
 	else
 		console.log("No settings file at " .. SETTINGS_FILE_PATH)
@@ -91,6 +93,7 @@ end
 FRAMES_ON_PER_BUTTON = 10
 FRAMES_OFF_PER_BUTTON = 10
 
+readEventShufflerSettings()
 FRAMES_BETWEEN_CHOOSE = 60 * SECONDS_BETWEEN_SWITCHES
 
 buttonOnFrames = 0
@@ -104,6 +107,7 @@ queuedEventCount = 0
 controlIndex = 1
 
 math.randomseed(os.time())
+
 
 activeControls = CONTROLS_DICT[emu.getsystemid()]
 activeControls = shuffleArray(activeControls)
