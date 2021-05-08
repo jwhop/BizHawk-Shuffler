@@ -98,14 +98,19 @@ end
 FRAMES_ON_PER_BUTTON = 10
 FRAMES_OFF_PER_BUTTON = 10
 
+-- after a button is pressed you get this much cooldown time
+-- in which tracker inputs will be ignored
+buttonChangeCooldownTimer = 0
+BUTTON_CHANGE_COOLDOWN = 60
+
 readEventShufflerSettings()
 FRAMES_BETWEEN_CHOOSE = 60 * SECONDS_BETWEEN_SWITCHES
 
 buttonOnFrames = 0
 chooseButtonsFrames = 0
 
-queuedButton = null
-activeButton = null
+queuedButton = nil
+activeButton = nil
 
 queuedEventCount = 0
 
@@ -127,7 +132,7 @@ function chooseNextButton(rerollCount)
     end
     addToDebugLog("Choose button at index " .. index)
     lastQueuedButton = queuedButton
-    if lastQueuedButton == null then
+    if lastQueuedButton == nil then
         lastQueuedButton = "NULL"
     end
     queuedButton = activeControls[index]
@@ -147,6 +152,8 @@ chooseNextButton(0)
 function beginButtonPress() 
     addToDebugLog("Pressing button: " .. queuedButton)
     activeButton = queuedButton
+
+    buttonChangeCooldownTimer = 1
 end
 
 function showPendingControlsState()
@@ -156,10 +163,18 @@ function showPendingControlsState()
     timerStartX = client.bufferwidth()/2-60
     timerEndX = client.bufferwidth()-(client.bufferwidth()/2+1-60)
     timerMaxWidth = timerEndX - timerStartX
-    timerWidth = (chooseButtonsFrames * timerMaxWidth) / FRAMES_BETWEEN_CHOOSE
 
-    gui.drawBox(timerStartX, buffer+15, timerStartX + timerMaxWidth, 17+buffer, "white", "black")
-    gui.drawBox(timerStartX, buffer+15, timerStartX + timerWidth, 17+buffer, "white", "white")
+    if useControlSelectTimer then
+        timerWidth = (chooseButtonsFrames * timerMaxWidth) / FRAMES_BETWEEN_CHOOSE
+
+        gui.drawBox(timerStartX, buffer+15, timerStartX + timerMaxWidth, 17+buffer, "white", "black")
+        gui.drawBox(timerStartX, buffer+15, timerStartX + timerWidth, 17+buffer, "white", "white")
+    else
+        timerWidth = (buttonChangeCooldownTimer * timerMaxWidth) / BUTTON_CHANGE_COOLDOWN
+
+        gui.drawBox(timerStartX, buffer+15, timerStartX + timerMaxWidth, 17+buffer, "white", "black")
+        gui.drawBox(timerStartX, buffer+15, timerStartX + timerWidth, 17+buffer, "white", "yellow")
+    end
 end
 
 function showActiveControlsState()
@@ -213,7 +228,9 @@ function checkForQueuedButtonEvents()
                         -- if we're using the tracker (e.g. sonic's X-coord chooses button)
                         -- bump the offset by 1 (to pick a new button)
                         trackerStateOffset = trackerStateOffset + 1
-                        updateControlsViaTracker()
+                        if buttonChangeCooldownTimer == 0 then
+                            updateControlsViaTracker()
+                        end
                     end
                 end
 
@@ -239,7 +256,10 @@ function checkForQueuedTrackerStates()
                 elseif line:upper() == "RESET" then
                     trackerStates = {}
                 end
-                updateControlsViaTracker()
+
+                if buttonChangeCooldownTimer == 0 then
+                    updateControlsViaTracker()
+                end
             end
             os.remove(filePath)
         end
@@ -257,6 +277,8 @@ function updateControlsViaTracker()
 
     chosenKeyIndex = (chosenKeyIndex % tablelength(activeControls)) + 1
     queuedButton = activeControls[chosenKeyIndex]
+
+    addToDebugLog("updateControlsViaTracker --> current button = " .. queuedButton)
 end
 
 
@@ -271,12 +293,12 @@ while true do
         joypad.set({[keyId]=0})
     end
 
-    if activeButton == null then
+    if activeButton == nil then
         buttonOnFrames = 0
 
         if useControlSelectTimer then
             chooseButtonsFrames = chooseButtonsFrames + 1
-            if chooseButtonsFrames > FRAMES_BETWEEN_CHOOSE or queuedButton == null then
+            if chooseButtonsFrames > FRAMES_BETWEEN_CHOOSE or queuedButton == nil then
                 chooseNextButton(0)
             end
         else
@@ -287,9 +309,20 @@ while true do
 
         checkForQueuedTrackerStates()
         checkForQueuedButtonEvents()
+
+        if buttonChangeCooldownTimer > 0 then
+            buttonChangeCooldownTimer = buttonChangeCooldownTimer + 1
+            if  buttonChangeCooldownTimer > BUTTON_CHANGE_COOLDOWN then
+                buttonChangeCooldownTimer = 0
+                addToDebugLog("buttonChangeCooldownTimer timed out")
+                if useControlSelectTimer == false then
+                    updateControlsViaTracker()
+                end
+            end
+        end
     else
         if buttonOnFrames <= FRAMES_ON_PER_BUTTON then
-            addToDebugLog("Pressing " .. activeButton)
+            -- addToDebugLog("Pressing " .. activeButton)
             joypad.set({[activeButton]=1})
         end
 
@@ -299,7 +332,7 @@ while true do
         showActiveControlsState()
 
         if buttonOnFrames > FRAMES_ON_PER_BUTTON + FRAMES_OFF_PER_BUTTON then
-            activeButton = null
+            activeButton = nil
         end
     end
 

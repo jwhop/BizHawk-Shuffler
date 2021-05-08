@@ -469,7 +469,7 @@ else
 end
 
 function saveTime(currentRom)
-	if currentGame == null then
+	if currentGame == nil then
 		addToDebugLog("Cannot save time without currentGame")
 		return
 	end
