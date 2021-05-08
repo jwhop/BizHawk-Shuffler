@@ -535,6 +535,10 @@ function checkForSwapEvent()
 			if lastTriggerValue[key] == nil then
 				lastTriggerValue[key] = 0
 			end
+
+			if value["trackerDivisor"] > 0 then
+				currentTriggerValue = math.floor(currentTriggerValue / value["trackerDivisor"])
+			end
 			
 
 			-- If the calculated score for this trigger is different enough from the
@@ -546,7 +550,9 @@ function checkForSwapEvent()
 
 				-- flag to begin counting down the swap timer for this trigger
 				-- (immediate if "delay" is set to 0, after a few frames otherwise)
-				if currentTriggerValue ~= 0 and ringDifference > value["minChange"] and ringDifference < value["maxChange"] and value["enabled"] then
+				if currentTriggerValue ~= 0 and ringDifference > value["minChange"] and ringDifference < value["maxChange"] and value["enabled"] and value["isTracker"] == false then
+					
+					
 					swapForTriggerCounters[key] = 1
 
 					addToDebugLog("queuedControlEvents: " .. inspect(queuedControlEvents) .. ", " .. value["controlOutput"])
@@ -554,9 +560,27 @@ function checkForSwapEvent()
 
 					addToDebugLog("flagToSwap set at checkForSwapEvent, ".. key .. " " .. lastTriggerValue[key] .. " -> " .. currentTriggerValue)
 				end
+
+				if value["isTracker"] and value["enabled"] and outcomeIsEnabled(EVENT_OUTCOME_OUTPUT_CONTROL) then
+					writeTrackerToController(key, currentTriggerValue)
+				end
 			end
 		end
 	end
+end
+
+function writeTrackerToController(key, value)
+	eventIndex = math.random(1, 10)
+	eventCountString = string.format("%05d", eventIndex)
+
+	stringToSend = key .. ":" .. value
+
+	filePath = ".\\ControlsOutput\\tracker_" .. eventCountString .. ".txt"
+	fileToWrite = io.open(filePath,"w")
+	fileToWrite:write(stringToSend)
+	fileToWrite:close()
+
+	addToDebugLog(EVENT_OUTCOME_OUTPUT_CONTROL .. " tracked: " .. stringToSend .. " to " .. filePath)
 end
 
 -- Save the current states of the triggers, so that when we swap
@@ -606,6 +630,8 @@ function decodeGameDefs(sourceString)
 			loadedGameDefs["scoreCounters"][lineSplit[1]]["domain"] = "DEFAULT" --memoryForConsole(emu.getsystemid())
 			loadedGameDefs["scoreCounters"][lineSplit[1]]["controlOutput"] = "PRESS"
 			loadedGameDefs["scoreCounters"][lineSplit[1]]["enabled"] = true
+			loadedGameDefs["scoreCounters"][lineSplit[1]]["isTracker"] = false
+			loadedGameDefs["scoreCounters"][lineSplit[1]]["trackerDivisor"] = 1
 
 			-- now decode each phrase
 			data = splitString(lineSplit[2], "/")
@@ -628,7 +654,7 @@ function decodeGameDefs(sourceString)
 						loadedGameDefs["scoreCounters"][lineSplit[1]]["maxChange"] = tonumber(entry[2])
 					end
 					if entry[1] == "delay" then
-						loadedGameDefs["scoreCounters"][lineSplit[1]]["delay"] = tonumber(entry[2])
+						loadedGameDefs["scoreCounters"][lineSplit[1]]["delay"] = 
 					end
 					if entry[1] == "domain" then
 						loadedGameDefs["scoreCounters"][lineSplit[1]]["domain"] = entry[2]
@@ -638,6 +664,12 @@ function decodeGameDefs(sourceString)
 					end
 					if entry[1] == "enabled" then
 						loadedGameDefs["scoreCounters"][lineSplit[1]]["enabled"] = entry[2]:upper() == "TRUE"
+					end
+					if entry[1] == "isTracker" then
+						loadedGameDefs["scoreCounters"][lineSplit[1]]["isTracker"] = entry[2]:upper() == "TRUE"
+					end
+					if entry[1] == "trackerDivisor" then
+						loadedGameDefs["scoreCounters"][lineSplit[1]]["trackerDivisor"] = tonumber(entry[2])
 					end
 				end
 			end

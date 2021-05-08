@@ -13,6 +13,10 @@ CONTROLS_DICT = {
 
 SECONDS_BETWEEN_SWITCHES = 1
 
+trackerStates = {}
+
+useControlSelectTimer = true
+
 buffer = 0 -- Sets countdown location. Adding 8 makes it appear correct for the NES.
 if emu.getsystemid() == "NES" then
 	buffer = 8
@@ -107,7 +111,6 @@ queuedEventCount = 0
 controlIndex = 1
 
 math.randomseed(os.time())
-
 
 activeControls = CONTROLS_DICT[emu.getsystemid()]
 activeControls = shuffleArray(activeControls)
@@ -213,6 +216,34 @@ function checkForQueuedButtonEvents()
     end
 end
 
+function checkForQueuedTrackerStates()
+    for i=1,10 do
+		eventCountString = string.format("%05d", i)
+        filePath = FOLDER_TO_READ .. "tracker_" .. eventCountString .. ".txt"
+        if file_exists(filePath) then
+            addToDebugLog("  TRACKER " .. i .. ": " .. filePath)
+            for line in io.lines(filePath) do	
+                components = splitString(line, ":")
+                if components[1] ~= nil and components[2] ~= nil then
+                    trackerStates[components[1]] = tonumber(components[2])
+                    updateControlsViaTracker()
+                end
+            end
+        end
+    end
+end
+
+function updateControlsViaTracker() 
+    useControlSelectTimer = false
+    chosenKeyIndex = 1
+    for key, value in pairs(trackerStates) do
+        chosenKeyIndex = chosenKeyIndex + value
+    end
+
+    chosenKeyIndex = (chosenKeyIndex % tablelength(activeControls)) + 1
+    queuedButton = activeControls[chosenKeyIndex]
+end
+
 while true do
     activeControls = CONTROLS_DICT[emu.getsystemid()]
 
@@ -222,14 +253,19 @@ while true do
 
     if activeButton == null then
         buttonOnFrames = 0
-        chooseButtonsFrames = chooseButtonsFrames + 1
 
-        if chooseButtonsFrames > FRAMES_BETWEEN_CHOOSE or queuedButton == null then
-            chooseNextButton(0)
+        if useControlSelectTimer then
+            chooseButtonsFrames = chooseButtonsFrames + 1
+            if chooseButtonsFrames > FRAMES_BETWEEN_CHOOSE or queuedButton == null then
+                chooseNextButton(0)
+            end
+        else
+            chooseButtonsFrames = 0
         end
 
         showPendingControlsState()
 
+        checkForQueuedTrackerStates()
         checkForQueuedButtonEvents()
     else
         if buttonOnFrames <= FRAMES_ON_PER_BUTTON then
