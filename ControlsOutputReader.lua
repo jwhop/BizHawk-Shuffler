@@ -112,7 +112,8 @@ controlIndex = 1
 
 math.randomseed(os.time())
 
-activeControls = CONTROLS_DICT[emu.getsystemid()]
+lastSystemID = emu.getsystemid()
+activeControls = CONTROLS_DICT[lastSystemID]
 activeControls = shuffleArray(activeControls)
 
 function chooseNextButton(rerollCount)
@@ -217,7 +218,7 @@ function checkForQueuedButtonEvents()
 end
 
 function checkForQueuedTrackerStates()
-    for i=1,10 do
+    for i=1,100 do
 		eventCountString = string.format("%05d", i)
         filePath = FOLDER_TO_READ .. "tracker_" .. eventCountString .. ".txt"
         if file_exists(filePath) then
@@ -229,6 +230,7 @@ function checkForQueuedTrackerStates()
                     updateControlsViaTracker()
                 end
             end
+            os.remove(filePath)
         end
     end
 end
@@ -244,8 +246,13 @@ function updateControlsViaTracker()
     queuedButton = activeControls[chosenKeyIndex]
 end
 
+
 while true do
-    activeControls = CONTROLS_DICT[emu.getsystemid()]
+    if emu.getsystemid() ~= lastSystemID then
+        lastSystemID = emu.getsystemid()
+        activeControls = CONTROLS_DICT[lastSystemID]
+        activeControls = shuffleArray(activeControls)
+    end
 
     for index, keyId in pairs(activeControls) do
         joypad.set({[keyId]=0})

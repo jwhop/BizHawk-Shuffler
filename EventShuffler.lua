@@ -570,7 +570,7 @@ function checkForSwapEvent()
 end
 
 function writeTrackerToController(key, value)
-	eventIndex = math.random(1, 10)
+	eventIndex = math.random(1, 100)
 	eventCountString = string.format("%05d", eventIndex)
 
 	stringToSend = key .. ":" .. value
@@ -654,7 +654,7 @@ function decodeGameDefs(sourceString)
 						loadedGameDefs["scoreCounters"][lineSplit[1]]["maxChange"] = tonumber(entry[2])
 					end
 					if entry[1] == "delay" then
-						loadedGameDefs["scoreCounters"][lineSplit[1]]["delay"] = 
+						loadedGameDefs["scoreCounters"][lineSplit[1]]["delay"] = tonumber(entry[2])
 					end
 					if entry[1] == "domain" then
 						loadedGameDefs["scoreCounters"][lineSplit[1]]["domain"] = entry[2]
