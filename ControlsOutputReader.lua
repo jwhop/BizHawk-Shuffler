@@ -293,6 +293,9 @@ while true do
         joypad.set({[keyId]=0})
     end
 
+    checkForQueuedTrackerStates()
+    checkForQueuedButtonEvents()
+
     if activeButton == nil then
         buttonOnFrames = 0
 
@@ -307,8 +310,10 @@ while true do
 
         showPendingControlsState()
 
-        checkForQueuedTrackerStates()
-        checkForQueuedButtonEvents()
+        -- THESE HAVE BEEN MOVED OUTSIDE THE CHECK
+        --   because it queues up inputs in a way I don't like
+        -- checkForQueuedTrackerStates()
+        -- checkForQueuedButtonEvents()
 
         if buttonChangeCooldownTimer > 0 then
             buttonChangeCooldownTimer = buttonChangeCooldownTimer + 1
