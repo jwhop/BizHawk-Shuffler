@@ -14,6 +14,7 @@ CONTROLS_DICT = {
 SECONDS_BETWEEN_SWITCHES = 1
 
 trackerStates = {}
+trackerStateOffset = 0
 
 useControlSelectTimer = true
 
@@ -205,7 +206,15 @@ function checkForQueuedButtonEvents()
                     beginButtonPress()
                 end
                 if shouldChangeButton then
-                    chooseNextButton(0)
+                    if useControlSelectTimer then
+                        -- if we're using the timer, switch to the next input
+                        chooseNextButton(0)
+                    else
+                        -- if we're using the tracker (e.g. sonic's X-coord chooses button)
+                        -- bump the offset by 1 (to pick a new button)
+                        trackerStateOffset = trackerStateOffset + 1
+                        updateControlsViaTracker()
+                    end
                 end
 
                 addToDebugLog("Deleting press: ")
@@ -227,8 +236,10 @@ function checkForQueuedTrackerStates()
                 components = splitString(line, ":")
                 if components[1] ~= nil and components[2] ~= nil then
                     trackerStates[components[1]] = tonumber(components[2])
-                    updateControlsViaTracker()
+                elseif line:upper() == "RESET" then
+                    trackerStates = {}
                 end
+                updateControlsViaTracker()
             end
             os.remove(filePath)
         end
@@ -236,9 +247,11 @@ function checkForQueuedTrackerStates()
 end
 
 function updateControlsViaTracker() 
-    useControlSelectTimer = false
-    chosenKeyIndex = 1
+    useControlSelectTimer = true
+
+    chosenKeyIndex = 1 + trackerStateOffset
     for key, value in pairs(trackerStates) do
+        useControlSelectTimer = false
         chosenKeyIndex = chosenKeyIndex + value
     end
 

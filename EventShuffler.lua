@@ -569,6 +569,18 @@ function checkForSwapEvent()
 	end
 end
 
+function clearTrackersForController()
+	eventIndex = math.random(1, 100)
+	eventCountString = string.format("%05d", eventIndex)
+
+	filePath = ".\\ControlsOutput\\tracker_" .. eventCountString .. ".txt"
+	fileToWrite = io.open(filePath,"w")
+	fileToWrite:write("RESET")
+	fileToWrite:close()
+
+	addToDebugLog(EVENT_OUTCOME_OUTPUT_CONTROL .. " RESET at path " .. filePath)
+end
+
 function writeTrackerToController(key, value)
 	eventIndex = math.random(1, 100)
 	eventCountString = string.format("%05d", eventIndex)
@@ -614,6 +626,8 @@ loadedGameDefs["scoreCounters"] = {}
 
 function decodeGameDefs(sourceString)
 	allLines = splitString(sourceString, "\n")
+	trackerFound = false
+
 	for lineIndex, line in pairs(allLines) do
 		addToDebugLog("Decoding shuffler line: " .. line)
 		lineSplit = splitString(line, ">")
@@ -667,6 +681,7 @@ function decodeGameDefs(sourceString)
 					end
 					if entry[1] == "isTracker" then
 						loadedGameDefs["scoreCounters"][lineSplit[1]]["isTracker"] = entry[2]:upper() == "TRUE"
+						trackerFound = true
 					end
 					if entry[1] == "trackerDivisor" then
 						loadedGameDefs["scoreCounters"][lineSplit[1]]["trackerDivisor"] = tonumber(entry[2])
@@ -675,6 +690,13 @@ function decodeGameDefs(sourceString)
 			end
 		end
 	end
+
+	-- tell the controller to stop using tracker inputs for this game to decide the conrols
+	-- and instead use the timer
+	if trackerFound == false then
+		clearTrackersForController()
+	end
+
 	eventDefinitionsExist = true
 end
 
