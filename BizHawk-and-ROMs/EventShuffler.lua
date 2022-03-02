@@ -156,7 +156,7 @@ function openCurrentTime(rom)
 		return
 	end
 	oldTime = io.open(".\\TimeLogs\\" .. currentGame .. ".txt","a+")
-	if oldTime ~=nil then
+	if(oldTime ~= nil) then
 		readOldTimeString = oldTime:read("*line")
 		if readOldTimeString ~= nil then
 			readOldTime = readOldTimeString
@@ -164,23 +164,23 @@ function openCurrentTime(rom)
 			readOldTime = 0
 		end
 		oldTime:close()
-	saveOldTime = readOldTime
-	oldCount = io.open(".\\PlayCount\\" .. currentGame .. ".txt","a+")
-	readOldCountString = oldCount:read("*line")
-	if readOldCountString ~= nil then
-		readOldCount = tonumber(readOldCountString)
-	else
-		readOldCount = 0
+		saveOldTime = readOldTime
+		oldCount = io.open(".\\PlayCount\\" .. currentGame .. ".txt","a+")
+		readOldCountString = oldCount:read("*line")
+		if readOldCountString ~= nil then
+			readOldCount = tonumber(readOldCountString)
+		else
+			readOldCount = 0
+		end
+		oldCount:close()
+		savePlayCount = readOldCount + 1
+		romDatabase = io.open("CurrentGameTime.txt","w")
+		romDatabase:write(gameinfo.getromname() .. " play time: " .. saveOldTime)
+		romDatabase:close()
+		timeDatabase = io.open("CurrentGameSwitchCount.txt","w")
+		timeDatabase:write(savePlayCount)
+		timeDatabase:close()
 	end
-	oldCount:close()
-	savePlayCount = readOldCount + 1
-	romDatabase = io.open("CurrentGameTime.txt","w")
-	romDatabase:write(gameinfo.getromname() .. " play time: " .. saveOldTime)
-	romDatabase:close()
-	timeDatabase = io.open("CurrentGameSwitchCount.txt","w")
-	timeDatabase:write(savePlayCount)
-	timeDatabase:close()
-	
 end
 	
 function ends_with(str, ending)
@@ -797,7 +797,7 @@ if databaseSize ~= nil then
 	if currentGame == nil then
 		currentGame = 0
 	end
-	--openCurrentTime(rom)
+	openCurrentTime(rom)
 	addToDebugLog("Current Game: " .. currentGame)
 	lowTime = userdata.get("lowTime")
 	if lowTime == nil then
