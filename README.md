@@ -11,11 +11,12 @@ Instead of swapping games, this version of the script will spawn a new instance 
 4. Place Bizhawk and related folders (EXCEPT for the Gameboy, GBA, N64, NDS, NES, SNES folders) into the 'BizHawk-and-ROMs' folder
 5. Open the EmuHawk emulator, go to config ->Customize.., and check "run in background"
 6. If you want to control each game together or separately, open EmuHawk, go to Config->Customize, and Check/Uncheck "allow background input"
-5. You may have to open each ROM and map controls correctly to how you want 
-6. Run RaceShufflerSetup.exe and hit 'save settings'
-7. Delete the "deleteMe" files in currentROMS and completedROMS
-6. Run Tetris,ButAllAtOnce.bat or Tetris,ButAllAtOnceQuiet.bat in the main folder
-7. Have fun! 
+7. Open the Lua Console (Tools->LuaConsole) and make the window tiny and drag it somewhere out of the way
+8. You may have to open each ROM and map controls correctly to how you want 
+9. Run RaceShufflerSetup.exe and hit 'save settings'
+10. Delete the "deleteMe" files in currentROMS and completedROMS
+11. Run Tetris,ButAllAtOnce.bat or Tetris,ButAllAtOnceQuiet.bat in the main folder
+12. Have fun! 
 
 
 # Supported Tetris Games

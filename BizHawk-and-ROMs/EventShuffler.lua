@@ -156,13 +156,14 @@ function openCurrentTime(rom)
 		return
 	end
 	oldTime = io.open(".\\TimeLogs\\" .. currentGame .. ".txt","a+")
-	readOldTimeString = oldTime:read("*line")
-	if readOldTimeString ~= nil then
-		readOldTime = readOldTimeString
-	else
-		readOldTime = 0
-	end
-	oldTime:close()
+	if oldTime ~=nil then
+		readOldTimeString = oldTime:read("*line")
+		if readOldTimeString ~= nil then
+			readOldTime = readOldTimeString
+		else
+			readOldTime = 0
+		end
+		oldTime:close()
 	saveOldTime = readOldTime
 	oldCount = io.open(".\\PlayCount\\" .. currentGame .. ".txt","a+")
 	readOldCountString = oldCount:read("*line")
@@ -796,7 +797,7 @@ if databaseSize ~= nil then
 	if currentGame == nil then
 		currentGame = 0
 	end
-	openCurrentTime(rom)
+	--openCurrentTime(rom)
 	addToDebugLog("Current Game: " .. currentGame)
 	lowTime = userdata.get("lowTime")
 	if lowTime == nil then
