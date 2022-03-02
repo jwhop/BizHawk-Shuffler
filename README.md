@@ -4,11 +4,15 @@ A fork of Alistair Aitcheson's fork (https://github.com/alistairaitcheson/BizHaw
 
 Instead of swapping games, this version of the script will spawn a new instance of a game and tile it with your existing games on your desktop.
 
+# Warning
+
+This is a program that manipulates windows and opens copies of itself on your computer. If your computer is slow, it may have hard time. Watch out! 
+
 # Setup
 1. Download Bizhawk (https://github.com/TASEmulators/BizHawk/releases/)
 2. Download Tetris ROMs (see supported Tetris game list below)
 3. Place Tetris ROMs in CurrentROMs folder
-4. Place Bizhawk and related folders (EXCEPT for the Gameboy, GBA, N64, NDS, NES, SNES folders) into the 'BizHawk-and-ROMs' folder
+4. Place all files in the unzipped bizhawk directory into the 'BizHawk-and-ROMs' folder. CLICK 'SKIP THESE FILES' WHEN PROMPTED ABOUT DUPLICATES
 5. Open the EmuHawk emulator, go to config ->Customize.., and check "run in background"
 6. If you want to control each game together or separately, open EmuHawk, go to Config->Customize, and Check/Uncheck "allow background input"
 7. Open the Lua Console (Tools->LuaConsole) and make the window tiny and drag it somewhere out of the way
@@ -74,6 +78,8 @@ Fields after the `>` can be in any order. If not set then the fields will use de
 If your emulator hangs on a frame, try removing the n64 ROMs from your currentROMs folder. They can be extremely picky to work with.
 
 The program works by tiling windows with the word "tetris" in their header, so if you have any other pages open, it will mess up the tiling (a bit silly, i know, but can't find a workaround yet D:)
+
+if your lua console says 'lua exception 2' try closing and restarting
 
 # Contact me
 
