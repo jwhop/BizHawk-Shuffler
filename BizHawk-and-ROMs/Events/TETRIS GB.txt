@@ -1,0 +1,2 @@
+line>bytes:1E,1F/base:100/minChange:0/maxChange:2147483647/delay:0/domain:HRAM/controlOutput:PRESS/enabled:True/isTracker:False/trackerDivisor:1/blockFromZero:False/steppedChangeEventBuffer:0
+endGame>bytes:1FF4/base:100/minChange:0/maxChange:2147483647/delay:600/domain:WRAM/controlOutput:PRESS/enabled:True/isTracker:False/trackerDivisor:1/blockFromZero:False/steppedChangeEventBuffer:0/isEnd:True

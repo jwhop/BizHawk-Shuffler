@@ -1,0 +1,2 @@
+line>bytes:33A8/base:10/minChange:0/maxChange:2147483647/delay:0/domain:IWRAM/controlOutput:PRESS/enabled:True/isTracker:False/trackerDivisor:1/blockFromZero:False/steppedChangeEventBuffer:0
+end>bytes:339C/base:10/minChange:0/maxChange:2147483647/delay:0/domain:IWRAM/controlOutput:PRESS/enabled:True/isEnd:True/isTracker:False/trackerDivisor:1/blockFromZero:False/steppedChangeEventBuffer:0

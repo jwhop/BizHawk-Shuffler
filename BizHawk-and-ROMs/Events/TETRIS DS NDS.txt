@@ -1,0 +1,2 @@
+line>bytes:17DD38,17DD39,17DD3A,17DD3B/base:10/minChange:0/maxChange:2147483647/delay:0/domain:RAM/controlOutput:PRESS/enabled:True/isTracker:False/trackerDivisor:1/blockFromZero:False/steppedChangeEventBuffer:0
+end>bytes:0792E0,0792E1,0792E2,0792E3/base:10/minChange:0/maxChange:2147483647/delay:48/domain:RAM/controlOutput:PRESS/enabled:True/isEnd:True/isTracker:False/trackerDivisor:1/blockFromZero:False/steppedChangeEventBuffer:0

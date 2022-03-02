@@ -1,0 +1,1 @@
+line>bytes:1D2644,1D2645,1D2464,1D2647,1D2648,1D264C/base:10/minChange:1/maxChange:2147483647/delay:0/domain:RDRAM/controlOutput:PRESS/enabled:True/isTracker:False/trackerDivisor:1/blockFromZero:False/steppedChangeEventBuffer:0
