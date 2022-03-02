@@ -30,6 +30,7 @@ function splitString(inputstr, sep)
 	local t={}
 	for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
 			table.insert(t, str)
+			table.insert(t, str)
 	end
 	return t
 end
@@ -783,9 +784,6 @@ eventDefinitionsExist = false
 inspect = require('inspect')
 gameDefs = {}
 winapi = require('winapi')
-events = require('EventDispatcher')
-dispatcher = events()
-dispatcher:addEventListener("end", GameOver)
 controlEventsSent = 0
 queuedControlEvents = {}
 		

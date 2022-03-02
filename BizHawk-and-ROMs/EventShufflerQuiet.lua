@@ -785,9 +785,6 @@ eventDefinitionsExist = false
 inspect = require('inspect')
 gameDefs = {}
 winapi = require('winapi')
-events = require('EventDispatcher')
-dispatcher = events()
-dispatcher:addEventListener("end", GameOver)
 controlEventsSent = 0
 queuedControlEvents = {}
 		

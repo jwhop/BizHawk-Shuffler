@@ -1,1 +1,1 @@
-start BizHawk-and-ROMs\EmuHawk.exe --lua="BizHawk-and-ROMs\EventShuffler.lua"
+start BizHawk-and-ROMs\EmuHawk.exe --lua="EventShuffler.lua"
