@@ -9,7 +9,7 @@ Instead of swapping games, this version of the script will spawn a new instance 
 This is a program that manipulates windows and opens copies of itself on your computer. If your computer is slow, it may have hard time. Watch out! 
 
 # Setup
-1. Download Bizhawk (https://github.com/TASEmulators/BizHawk/releases/)
+1. Download Bizhawk UPDATE 3/2/22: You will most likely NEED this bizhawk version:  https://www.alistairaitcheson.com/downloads/BizHawk_2.6.1_with_shuffler_fix_001.zip
 2. Download Tetris ROMs (see supported Tetris game list below)
 3. Place Tetris ROMs in CurrentROMs folder
 4. Place all files in the unzipped bizhawk directory into the 'BizHawk-and-ROMs' folder. CLICK 'SKIP THESE FILES' WHEN PROMPTED ABOUT DUPLICATES
